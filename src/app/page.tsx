@@ -1,65 +1,282 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  TrendingUp,
+  Users,
+  DollarSign,
+  Percent,
+  BookOpen,
+} from "lucide-react";
+
+interface TodaySchedule {
+  id: string;
+  time: string;
+  studentName: string;
+  durationMinutes: number;
+}
+
+interface MonthStats {
+  lessonCount: number;
+  attendedCount: number;
+  income: number;
+  studentCount: number;
+  attendanceRate: number;
+}
+
+interface RecentLesson {
+  id: string;
+  date: string;
+  studentName: string;
+  repertoire: string | null;
+}
+
+interface DashboardData {
+  today: {
+    lessonCount: number;
+    attendedCount: number;
+    pendingCount: number;
+    schedules: TodaySchedule[];
+  };
+  month: MonthStats;
+  recentLessons: RecentLesson[];
+}
+
+export default function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/dashboard")
+      .then((res) => res.json())
+      .then((json) => {
+        setData(json);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
+        加载中...
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
+        数据加载失败
+      </div>
+    );
+  }
+
+  const { today, month, recentLessons } = data;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="space-y-8">
+      <h1 className="text-2xl font-bold tracking-tight">数据看板</h1>
+
+      {/* 今日概览 */}
+      <section>
+        <h2 className="text-lg font-semibold mb-4">今日概览</h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                今日课程
+              </CardTitle>
+              <BookOpen className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{today.lessonCount}</p>
+              <p className="text-xs text-muted-foreground">
+                已记录 {today.attendedCount} 节
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                已出勤
+              </CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-green-600">
+                {today.attendedCount}
+              </p>
+              <p className="text-xs text-muted-foreground">今日完成课程</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                待上课
+              </CardTitle>
+              <Clock className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-orange-500">
+                {today.pendingCount}
+              </p>
+              <p className="text-xs text-muted-foreground">等待课程记录</p>
+            </CardContent>
+          </Card>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* 今日课程安排 */}
+        {today.schedules.length > 0 && (
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">
+                今日课程安排
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {today.schedules.map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="font-medium">{s.time}</span>
+                      <span>{s.studentName}</span>
+                    </div>
+                    <Badge variant="secondary">
+                      {s.durationMinutes} 分钟
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </section>
+
+      {/* 本月概览 */}
+      <section>
+        <h2 className="text-lg font-semibold mb-4">本月概览</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                本月课程
+              </CardTitle>
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{month.lessonCount}</p>
+              <p className="text-xs text-muted-foreground">
+                出勤 {month.attendedCount} 节
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                本月收入
+              </CardTitle>
+              <DollarSign className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-green-600">
+                ¥{month.income.toLocaleString()}
+              </p>
+              <p className="text-xs text-muted-foreground">课时费收入</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                学生人数
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{month.studentCount}</p>
+              <p className="text-xs text-muted-foreground">在读学生</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                出勤率
+              </CardTitle>
+              <Percent className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-blue-600">
+                {month.attendanceRate}%
+              </p>
+              <p className="text-xs text-muted-foreground">本月出勤率</p>
+            </CardContent>
+          </Card>
         </div>
-      </main>
+      </section>
+
+      {/* 最近记录 */}
+      <section>
+        <h2 className="text-lg font-semibold mb-4">最近记录</h2>
+        <Card>
+          <CardContent className="p-0">
+            {recentLessons.length === 0 ? (
+              <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
+                暂无课程记录
+              </div>
+            ) : (
+              <div className="divide-y">
+                {recentLessons.map((l) => (
+                  <Link
+                    key={l.id}
+                    href={`/lessons`}
+                    className="flex items-center justify-between px-6 py-3 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="text-sm">
+                        <span className="font-medium">{l.studentName}</span>
+                        {l.repertoire && (
+                          <span className="text-muted-foreground ml-2">
+                            — {l.repertoire}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      {new Date(l.date).toLocaleDateString("zh-CN")}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        {recentLessons.length > 0 && (
+          <div className="mt-3 text-right">
+            <Link
+              href="/lessons"
+              className="text-sm text-primary hover:underline"
+            >
+              查看全部课程记录 →
+            </Link>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
