@@ -9,7 +9,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorMessage } from "@/components/ui/error-message";
+import { Plus, BookOpen } from "lucide-react";
 
 interface Student { id: string; name: string; }
 interface Lesson {
@@ -25,7 +29,9 @@ interface Lesson {
 }
 
 export default function LessonsPage() {
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const toast = useToast();
+  const [data, setData] = useState<Lesson[] | null>(null);
+  const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<Student[]>([]);
   const [open, setOpen] = useState(false);
   const [filterStudent, setFilterStudent] = useState("all");
@@ -38,13 +44,20 @@ export default function LessonsPage() {
   const [lessonNotes, setLessonNotes] = useState("");
   const [homework, setHomework] = useState("");
   const [status, setStatus] = useState("ATTENDED");
+  const [error, setError] = useState("");
+  const [submitLoading, setSubmitLoading] = useState(false);
 
   async function fetchLessons() {
-    const url = filterStudent !== "all"
-      ? `/api/lessons?studentId=${filterStudent}`
-      : "/api/lessons";
-    const res = await fetch(url);
-    setLessons(await res.json());
+    setLoading(true);
+    try {
+      const url = filterStudent !== "all"
+        ? `/api/lessons?studentId=${filterStudent}`
+        : "/api/lessons";
+      const res = await fetch(url);
+      setData(await res.json());
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function fetchStudents() {
@@ -57,19 +70,35 @@ export default function LessonsPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const res = await fetch("/api/lessons", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        studentId, date, startTime,
-        durationMinutes: parseInt(duration),
-        repertoire, notes: lessonNotes, homework, status,
-      }),
-    });
-    if (res.ok) {
-      setOpen(false);
-      fetchLessons();
-      setRepertoire(""); setLessonNotes(""); setHomework("");
+    setError("");
+
+    if (!studentId) { setError("请选择学生"); return; }
+    if (!date) { setError("请选择日期"); return; }
+
+    setSubmitLoading(true);
+    try {
+      const res = await fetch("/api/lessons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId, date, startTime,
+          durationMinutes: parseInt(duration),
+          repertoire, notes: lessonNotes, homework, status,
+        }),
+      });
+      if (res.ok) {
+        toast.success("课程记录已保存");
+        setOpen(false);
+        fetchLessons();
+        setRepertoire(""); setLessonNotes(""); setHomework("");
+      } else {
+        const d = await res.json();
+        setError(d.error || "保存失败");
+      }
+    } catch {
+      toast.error("保存失败，请重试");
+    } finally {
+      setSubmitLoading(false);
     }
   }
 
@@ -93,11 +122,12 @@ export default function LessonsPage() {
               ))}
             </SelectContent>
           </Select>
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setError(""); }}>
             <DialogTrigger render={<Button><Plus size={16} className="mr-1" />新增记录</Button>} />
             <DialogContent className="max-w-md">
               <DialogHeader><DialogTitle>新增课程记录</DialogTitle></DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
+                <ErrorMessage message={error} />
                 <div className="space-y-2">
                   <Label>学生 *</Label>
                   <Select value={studentId} onValueChange={(v) => setStudentId(v ?? "")}>
@@ -148,7 +178,9 @@ export default function LessonsPage() {
                   <Label>布置作业</Label>
                   <Textarea value={homework} onChange={(e) => setHomework(e.target.value)} />
                 </div>
-                <Button type="submit" className="w-full">保存记录</Button>
+                <Button type="submit" className="w-full" disabled={submitLoading}>
+                  {submitLoading ? "保存中..." : "保存记录"}
+                </Button>
               </form>
             </DialogContent>
           </Dialog>
@@ -156,25 +188,32 @@ export default function LessonsPage() {
       </div>
 
       <div className="space-y-3">
-        {lessons.map((l) => (
-          <Card key={l.id}>
-            <CardContent className="flex justify-between items-start py-4">
-              <div>
-                <div className="font-semibold">
-                  {new Date(l.date).toLocaleDateString("zh-CN")} {l.startTime} · {l.student.name} · {l.durationMinutes}分钟
+        {loading && !data ? (
+          <Skeleton type="card" count={3} />
+        ) : data && data.length === 0 ? (
+          <EmptyState
+            icon={<BookOpen size={48} />}
+            title="暂无课程记录"
+            description="点击右上角「新增记录」开始记录第一节课"
+          />
+        ) : (
+          data?.map((l) => (
+            <Card key={l.id}>
+              <CardContent className="flex justify-between items-start py-4">
+                <div>
+                  <div className="font-semibold">
+                    {new Date(l.date).toLocaleDateString("zh-CN")} {l.startTime} · {l.student.name} · {l.durationMinutes}分钟
+                  </div>
+                  {l.repertoire && <p className="text-sm mt-1">曲目：{l.repertoire}</p>}
+                  {l.notes && <p className="text-sm text-muted-foreground mt-1">{l.notes}</p>}
+                  {l.homework && <p className="text-sm mt-1">作业：{l.homework}</p>}
                 </div>
-                {l.repertoire && <p className="text-sm mt-1">曲目：{l.repertoire}</p>}
-                {l.notes && <p className="text-sm text-muted-foreground mt-1">{l.notes}</p>}
-                {l.homework && <p className="text-sm mt-1">作业：{l.homework}</p>}
-              </div>
-              <Badge variant={l.status === "ATTENDED" ? "default" : l.status === "ABSENT" ? "destructive" : "secondary"}>
-                {statusLabels[l.status]}
-              </Badge>
-            </CardContent>
-          </Card>
-        ))}
-        {lessons.length === 0 && (
-          <p className="text-center text-muted-foreground py-12">暂无课程记录</p>
+                <Badge variant={l.status === "ATTENDED" ? "default" : l.status === "ABSENT" ? "destructive" : "secondary"}>
+                  {statusLabels[l.status]}
+                </Badge>
+              </CardContent>
+            </Card>
+          ))
         )}
       </div>
     </div>
