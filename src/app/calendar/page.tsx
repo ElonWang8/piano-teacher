@@ -395,7 +395,7 @@ export default function CalendarPage() {
                   </Button>
                 }
               />
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md max-md:!max-w-full max-md:!h-dvh max-md:!rounded-none max-md:m-0">
                 <DialogHeader>
                   <DialogTitle>添加排课</DialogTitle>
                 </DialogHeader>
@@ -453,7 +453,7 @@ export default function CalendarPage() {
                       />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" className="w-full min-h-[44px] sticky bottom-0">
                     保存排课
                   </Button>
                 </form>
@@ -470,7 +470,7 @@ export default function CalendarPage() {
                   </Button>
                 }
               />
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md max-md:!max-w-full max-md:!h-dvh max-md:!rounded-none max-md:m-0">
                 <DialogHeader>
                   <DialogTitle>批量排课</DialogTitle>
                 </DialogHeader>
@@ -581,7 +581,7 @@ export default function CalendarPage() {
                     </p>
                   )}
 
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" className="w-full min-h-[44px] sticky bottom-0">
                     生成排课
                   </Button>
                 </form>
@@ -594,7 +594,7 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="flex gap-6 h-full">
+    <div className="flex flex-col lg:flex-row gap-6 h-full">
       {/* ======== left: calendar ======== */}
       <div className="flex flex-1 flex-col min-w-0">
         {/* --- month nav + add / batch buttons --- */}
@@ -622,7 +622,7 @@ export default function CalendarPage() {
                   </Button>
                 }
               />
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md max-md:!max-w-full max-md:!h-dvh max-md:!rounded-none max-md:m-0">
                 <DialogHeader>
                   <DialogTitle>批量排课</DialogTitle>
                 </DialogHeader>
@@ -733,7 +733,7 @@ export default function CalendarPage() {
                     </p>
                   )}
 
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" className="w-full min-h-[44px] sticky bottom-0">
                     生成排课
                   </Button>
                 </form>
@@ -750,7 +750,7 @@ export default function CalendarPage() {
                   </Button>
                 }
               />
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md max-md:!max-w-full max-md:!h-dvh max-md:!rounded-none max-md:m-0">
                 <DialogHeader>
                   <DialogTitle>添加排课</DialogTitle>
                 </DialogHeader>
@@ -814,7 +814,7 @@ export default function CalendarPage() {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" className="w-full min-h-[44px] sticky bottom-0">
                     保存排课
                   </Button>
                 </form>
@@ -893,7 +893,7 @@ export default function CalendarPage() {
       </div>
 
       {/* ======== right: selected day detail ======== */}
-      <div className="w-72 shrink-0">
+      <div className="w-full lg:w-72 shrink-0">
         {selectedDate ? (
           <>
             <h3 className="font-semibold mb-4">{selectedDayLabel}</h3>
@@ -975,7 +975,7 @@ export default function CalendarPage() {
 
       {/* T5: edit schedule dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-md:!max-w-full max-md:!h-dvh max-md:!rounded-none max-md:m-0">
           <DialogHeader>
             <DialogTitle>编辑排课</DialogTitle>
           </DialogHeader>
@@ -1011,15 +1011,15 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            <div className="flex gap-2 justify-end">
+            <div className="flex gap-2 justify-end sticky bottom-0 bg-background pt-3 border-t">
               <DialogClose
                 render={
-                  <Button variant="outline" type="button">
+                  <Button variant="outline" type="button" className="min-h-[44px]">
                     取消
                   </Button>
                 }
               />
-              <Button type="submit">保存修改</Button>
+              <Button type="submit" className="min-h-[44px]">保存修改</Button>
             </div>
           </form>
         </DialogContent>
