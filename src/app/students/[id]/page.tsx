@@ -77,12 +77,12 @@ export default function StudentDetailPage() {
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold">{student.name}</h2>
+            <h2 className="text-xl md:text-2xl font-bold">{student.name}</h2>
             <Dialog open={editOpen} onOpenChange={setEditOpen}>
               <DialogTrigger render={<Button variant="ghost" size="icon" />}>
                 <Pencil size={16} />
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[90dvh] max-md:!rounded-lg">
                 <DialogHeader><DialogTitle>编辑学生</DialogTitle></DialogHeader>
                 <StudentForm
                   student={student}
@@ -106,7 +106,7 @@ export default function StudentDetailPage() {
           <TabsTrigger value="info">信息</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="lessons" className="mt-4 space-y-3">
+        <TabsContent value="lessons" className="mt-4 space-y-2 md:space-y-3">
           {student.lessons.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">暂无课程记录</p>
           ) : (
@@ -135,7 +135,7 @@ export default function StudentDetailPage() {
         <TabsContent value="progress" className="mt-4">
           <Card>
             <CardContent className="py-6 space-y-4">
-              <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                 <div>
                   <div className="text-2xl font-bold text-primary">{student.totalLessons}</div>
                   <div className="text-sm text-muted-foreground">总课时</div>

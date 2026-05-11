@@ -38,7 +38,7 @@ export default function RegisterPage() {
     <div className="flex items-center justify-center min-h-screen bg-muted">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-center">创建账号</CardTitle>
+          <CardTitle className="text-center text-xl md:text-2xl">创建账号</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -55,7 +55,7 @@ export default function RegisterPage() {
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full min-h-[44px]" disabled={loading}>
               {loading ? "注册中..." : "注册"}
             </Button>
           </form>

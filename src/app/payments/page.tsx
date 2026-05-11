@@ -120,8 +120,8 @@ export default function PaymentsPage() {
   if (loading) {
     return (
       <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">费用管理</h2>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-6">
+          <h2 className="text-xl md:text-2xl font-bold">费用管理</h2>
         </div>
         <Skeleton type="card" count={3} />
       </div>
@@ -130,11 +130,11 @@ export default function PaymentsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">费用管理</h2>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-6">
+        <h2 className="text-xl md:text-2xl font-bold">费用管理</h2>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger render={<Button><Plus size={16} className="mr-1" />新增缴费</Button>} />
-          <DialogContent className="max-w-md">
+          <DialogTrigger render={<Button className="min-h-[44px]"><Plus size={16} className="mr-1" />新增缴费</Button>} />
+          <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[90dvh] max-md:!rounded-lg">
             <DialogHeader><DialogTitle>新增缴费记录</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -156,7 +156,7 @@ export default function PaymentsPage() {
                 <Label>日期</Label>
                 <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>金额（元）*</Label>
                   <Input type="number" value={amount} onChange={(e) => { setAmount(e.target.value); setFormErrors(prev => ({ ...prev, amount: undefined })); }} placeholder="0" required />
@@ -207,7 +207,7 @@ export default function PaymentsPage() {
         </TabsList>
 
         <TabsContent value="payments">
-          <div className="space-y-3">
+          <div className="space-y-2 md:space-y-3">
             {payments.map((p) => (
               <Card key={p.id}>
                 <CardContent className="flex justify-between items-center py-4">
@@ -233,7 +233,7 @@ export default function PaymentsPage() {
         </TabsContent>
 
         <TabsContent value="consumption">
-          <div className="space-y-3">
+          <div className="space-y-2 md:space-y-3">
             {consumedLessons.map((l) => (
               <Card key={l.id}>
                 <CardContent className="flex justify-between items-center py-4">

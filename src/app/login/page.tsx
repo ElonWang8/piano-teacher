@@ -38,7 +38,7 @@ export default function LoginPage() {
     <div className="flex items-center justify-center min-h-screen bg-muted">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-center">PianoRecord</CardTitle>
+          <CardTitle className="text-center text-xl md:text-2xl">PianoRecord</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -65,7 +65,7 @@ export default function LoginPage() {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full min-h-[44px]" disabled={loading}>
               {loading ? "登录中..." : "登录"}
             </Button>
           </form>

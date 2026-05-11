@@ -277,7 +277,7 @@ export default function LessonsPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">课程记录</h2>
+      <h2 className="text-xl md:text-2xl font-bold mb-6">课程记录</h2>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v ?? "pending")}>
         <TabsList className="mb-6">
@@ -287,7 +287,7 @@ export default function LessonsPage() {
 
         {/* ======================== 未上课 Tab ======================== */}
         <TabsContent value="pending">
-          <div className="space-y-3">
+          <div className="space-y-2 md:space-y-3">
             {schedulesLoading && !schedules ? (
               <Skeleton type="card" count={3} />
             ) : schedules && schedules.length === 0 ? (
@@ -333,7 +333,7 @@ export default function LessonsPage() {
         {/* ======================== 已上课 Tab ======================== */}
         <TabsContent value="completed">
           {/* toolbar */}
-          <div className="flex items-center justify-end gap-3 mb-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 mb-4">
             <Select
               value={filterStudent}
               onValueChange={(v) => setFilterStudent(v ?? "all")}
@@ -369,9 +369,9 @@ export default function LessonsPage() {
               }}
             >
               <DialogTrigger
-                render={<Button><Plus size={16} className="mr-1" />新增记录</Button>}
+                render={<Button className="min-h-[44px]"><Plus size={16} className="mr-1" />新增记录</Button>}
               />
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[90dvh] max-md:!rounded-lg">
                 <DialogHeader>
                   <DialogTitle>新增课程记录</DialogTitle>
                 </DialogHeader>
@@ -402,7 +402,7 @@ export default function LessonsPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>日期 *</Label>
                       <Input
@@ -421,7 +421,7 @@ export default function LessonsPage() {
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>时长（分钟）</Label>
                       <Input
@@ -471,7 +471,7 @@ export default function LessonsPage() {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full"
+                    className="w-full min-h-[44px]"
                     disabled={submitLoading}
                   >
                     {submitLoading ? "保存中..." : "保存记录"}
@@ -482,7 +482,7 @@ export default function LessonsPage() {
           </div>
 
           {/* lesson list */}
-          <div className="space-y-3">
+          <div className="space-y-2 md:space-y-3">
             {lessonsLoading && !lessons ? (
               <Skeleton type="card" count={3} />
             ) : lessons && lessons.length === 0 ? (
@@ -542,7 +542,7 @@ export default function LessonsPage() {
           }
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[90dvh] max-md:!rounded-lg">
           <DialogHeader>
             <DialogTitle>编辑课程记录</DialogTitle>
           </DialogHeader>
@@ -554,7 +554,7 @@ export default function LessonsPage() {
                 {formatDate(editing.date)} · {editing.student.name}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>时间</Label>
                   <Input
@@ -615,7 +615,7 @@ export default function LessonsPage() {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full min-h-[44px]"
                 disabled={editLoading}
               >
                 {editLoading ? "保存中..." : "保存修改"}

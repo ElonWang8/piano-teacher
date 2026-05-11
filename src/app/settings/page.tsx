@@ -20,7 +20,7 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">设置</h2>
+      <h2 className="text-xl md:text-2xl font-bold mb-6">设置</h2>
       <Card className="max-w-md">
         <CardHeader><CardTitle>个人资料</CardTitle></CardHeader>
         <CardContent>
@@ -33,7 +33,7 @@ export default function SettingsPage() {
               <Label>姓名</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} />
             </div>
-            <Button type="submit">保存</Button>
+            <Button type="submit" className="min-h-[44px]">保存</Button>
             {saved && <p className="text-sm text-green-600">已保存</p>}
           </form>
         </CardContent>

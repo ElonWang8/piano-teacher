@@ -76,11 +76,11 @@ export default function StudentsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">学生管理</h2>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-6">
+        <h2 className="text-xl md:text-2xl font-bold">学生管理</h2>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setError(""); }}>
-          <DialogTrigger render={<Button><Plus size={16} className="mr-1" />添加学生</Button>} />
-          <DialogContent>
+          <DialogTrigger render={<Button className="min-h-[44px]"><Plus size={16} className="mr-1" />添加学生</Button>} />
+          <DialogContent className="max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[90dvh] max-md:!rounded-lg">
             <DialogHeader><DialogTitle>添加学生</DialogTitle></DialogHeader>
             <ErrorMessage message={error} />
             <StudentForm onSuccess={() => { setOpen(false); fetchStudents(); toast.success("学生添加成功"); }} />
@@ -106,7 +106,7 @@ export default function StudentsPage() {
         ))}
       </div>
 
-      <div className="grid gap-3">
+      <div className="grid gap-2 md:gap-3">
         {loading && !data ? (
           <Skeleton type="card" count={3} />
         ) : data && data.length === 0 ? (
