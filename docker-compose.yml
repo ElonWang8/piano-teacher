@@ -4,11 +4,11 @@ services:
     container_name: piano-teacher
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "4387:3000"
     volumes:
-      - ./data:/app/prisma
+      - ./data:/app/data
     environment:
-      - DATABASE_URL=file:/app/prisma/dev.db
+      - DATABASE_URL=file:/app/data/dev.db
       - AUTH_SECRET=${AUTH_SECRET:-change-me-to-a-random-string}
     # 启动时自动同步数据库
     command: sh -c "cd /app && npx prisma db push --skip-generate && node server.js"
