@@ -10,6 +10,7 @@ export default defineConfig({
       "**/cypress/**",
       "**/.{idea,git,cache,output,temp}/**",
       "e2e/**",
+      ".worktrees/**",
     ],
   },
   resolve: {

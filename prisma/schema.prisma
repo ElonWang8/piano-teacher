@@ -1,16 +1,10 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
-}
-
-enum LessonStatus {
-  ATTENDED
-  ABSENT
-  LEAVE
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -58,7 +52,7 @@ model Lesson {
   repertoire      String?
   notes           String?
   homework        String?
-  status          LessonStatus @default(ATTENDED)
+  status          String       @default("ATTENDED")
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
