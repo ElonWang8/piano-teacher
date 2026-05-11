@@ -68,8 +68,8 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="space-y-8">
-        <h1 className="text-2xl font-bold tracking-tight">数据看板</h1>
-        <div className="grid gap-4 md:grid-cols-3">
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight">数据看板</h1>
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
           <Skeleton type="card" count={3} />
         </div>
         <Skeleton type="card" count={3} />
@@ -91,12 +91,12 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold tracking-tight">数据看板</h1>
+      <h1 className="text-xl md:text-2xl font-bold tracking-tight">数据看板</h1>
 
       {/* 今日概览 */}
       <section>
         <h2 className="text-lg font-semibold mb-4">今日概览</h2>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -177,7 +177,7 @@ export default function DashboardPage() {
       {/* 本月概览 */}
       <section>
         <h2 className="text-lg font-semibold mb-4">本月概览</h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
