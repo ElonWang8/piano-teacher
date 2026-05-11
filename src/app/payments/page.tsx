@@ -10,7 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorMessage } from "@/components/ui/error-message";
+import { useToast } from "@/hooks/use-toast";
+import { Plus, CreditCard } from "lucide-react";
 
 interface Student { id: string; name: string; }
 interface Payment {
@@ -28,10 +32,12 @@ interface Lesson {
 }
 
 export default function PaymentsPage() {
+  const toast = useToast();
   const [students, setStudents] = useState<Student[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [consumedLessons, setConsumedLessons] = useState<Lesson[]>([]);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // form state
   const [studentId, setStudentId] = useState("");
@@ -39,6 +45,9 @@ export default function PaymentsPage() {
   const [amount, setAmount] = useState("");
   const [lessonCount, setLessonCount] = useState("");
   const [notes, setNotes] = useState("");
+
+  // form validation errors
+  const [formErrors, setFormErrors] = useState<{ amount?: string; lessonCount?: string }>({});
 
   async function fetchPayments() {
     const res = await fetch("/api/payments");
@@ -58,27 +67,48 @@ export default function PaymentsPage() {
     }
   }
 
-  useEffect(() => { fetchStudents(); fetchPayments(); fetchConsumedLessons(); }, []);
+  useEffect(() => {
+    Promise.all([fetchStudents(), fetchPayments(), fetchConsumedLessons()]).finally(() =>
+      setLoading(false)
+    );
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // Validate
+    const errors: { amount?: string; lessonCount?: string } = {};
+    const amt = parseInt(amount);
+    const cnt = parseInt(lessonCount);
+    if (isNaN(amt) || amt <= 0) errors.amount = "金额必须大于0";
+    if (isNaN(cnt) || cnt <= 0) errors.lessonCount = "课时数必须大于0";
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
+
     const res = await fetch("/api/payments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         studentId,
         date,
-        amount: parseInt(amount),
-        lessonCount: parseInt(lessonCount),
+        amount: amt,
+        lessonCount: cnt,
         notes,
       }),
     });
     if (res.ok) {
+      toast.success("缴费记录已保存");
       setOpen(false);
       fetchPayments();
       setAmount("");
       setLessonCount("");
       setNotes("");
+      setFormErrors({});
+    } else {
+      toast.error("保存失败，请重试");
     }
   }
 
@@ -86,6 +116,17 @@ export default function PaymentsPage() {
   const totalPaidLessons = payments.reduce((sum, p) => sum + p.lessonCount, 0);
   const totalConsumed = consumedLessons.length;
   const remainingLessons = totalPaidLessons - totalConsumed;
+
+  if (loading) {
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">费用管理</h2>
+        </div>
+        <Skeleton type="card" count={3} />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -114,11 +155,13 @@ export default function PaymentsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>金额（元）*</Label>
-                  <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" required />
+                  <Input type="number" value={amount} onChange={(e) => { setAmount(e.target.value); setFormErrors(prev => ({ ...prev, amount: undefined })); }} placeholder="0" required />
+                  {formErrors.amount && <ErrorMessage message={formErrors.amount} />}
                 </div>
                 <div className="space-y-2">
                   <Label>课时数 *</Label>
-                  <Input type="number" value={lessonCount} onChange={(e) => setLessonCount(e.target.value)} placeholder="0" required />
+                  <Input type="number" value={lessonCount} onChange={(e) => { setLessonCount(e.target.value); setFormErrors(prev => ({ ...prev, lessonCount: undefined })); }} placeholder="0" required />
+                  {formErrors.lessonCount && <ErrorMessage message={formErrors.lessonCount} />}
                 </div>
               </div>
               <div className="space-y-2">
@@ -180,7 +223,7 @@ export default function PaymentsPage() {
               </Card>
             ))}
             {payments.length === 0 && (
-              <p className="text-center text-muted-foreground py-12">暂无缴费记录</p>
+              <EmptyState icon={<CreditCard size={48} />} title="暂无缴费记录" description="点击右上角「新增缴费」添加第一笔缴费记录" />
             )}
           </div>
         </TabsContent>
