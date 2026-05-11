@@ -65,6 +65,7 @@ export async function PUT(
       startDate: body.startDate ? new Date(body.startDate) : undefined,
       level: body.level,
       notes: body.notes,
+      status: body.status,
     },
   });
 

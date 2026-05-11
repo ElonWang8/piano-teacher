@@ -2,13 +2,19 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.id)
     return NextResponse.json({ error: "未登录" }, { status: 401 });
 
+  const { searchParams } = new URL(req.url);
+  const status = searchParams.get("status");
+
   const students = await db.student.findMany({
-    where: { userId: session.user.id },
+    where: {
+      userId: session.user.id,
+      ...(status ? { status } : {}),
+    },
     include: {
       payments: true,
       _count: { select: { lessons: true } },
@@ -27,6 +33,7 @@ export async function GET() {
       parentPhone: s.parentPhone,
       startDate: s.startDate,
       notes: s.notes,
+      status: s.status,
       totalLessons: totalPaid,
       attendedLessons: attendedCount,
       remainingLessons: totalPaid - attendedCount,
@@ -43,7 +50,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
 
   const body = await req.json();
-  const { name, age, parentPhone, startDate, level, notes } = body;
+  const { name, age, parentPhone, startDate, level, notes, status } = body;
   if (!name)
     return NextResponse.json({ error: "学生姓名不能为空" }, { status: 400 });
 
@@ -56,6 +63,7 @@ export async function POST(req: Request) {
       startDate: startDate ? new Date(startDate) : null,
       level: level || null,
       notes: notes || null,
+      status: status || "ACTIVE",
     },
   });
 
