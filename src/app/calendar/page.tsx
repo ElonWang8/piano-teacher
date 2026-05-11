@@ -11,7 +11,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import {
   Dialog,
@@ -245,7 +244,9 @@ export default function CalendarPage() {
                     onValueChange={(v) => setFormStudentId(v ?? "")}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="选择学生" />
+                      <span className={formStudentId ? "" : "text-muted-foreground"}>
+                        {students.find(s => s.id === formStudentId)?.name || "选择学生"}
+                      </span>
                     </SelectTrigger>
                     <SelectContent>
                       {students.map((s) => (
@@ -340,7 +341,9 @@ export default function CalendarPage() {
                     onValueChange={(v) => setFormStudentId(v ?? "")}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="选择学生" />
+                      <span className={formStudentId ? "" : "text-muted-foreground"}>
+                        {students.find(s => s.id === formStudentId)?.name || "选择学生"}
+                      </span>
                     </SelectTrigger>
                     <SelectContent>
                       {students.map((s) => (
