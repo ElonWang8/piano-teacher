@@ -11,4 +11,4 @@ services:
       - DATABASE_URL=file:/app/prisma/dev.db
       - AUTH_SECRET=${AUTH_SECRET:-change-me-to-a-random-string}
     # 启动时自动同步数据库
-    command: sh -c "npx prisma db push --schema=/app/prisma/schema.prisma --skip-generate && node server.js"
+    command: sh -c "cd /app && npx prisma db push --skip-generate && node server.js"
