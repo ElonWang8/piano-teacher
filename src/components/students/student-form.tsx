@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Props {
   student?: {
@@ -14,6 +15,7 @@ interface Props {
     parentPhone: string | null;
     level: string | null;
     notes: string | null;
+    status?: string;
   };
   onSuccess: () => void;
   onError?: () => void;
@@ -25,6 +27,7 @@ export function StudentForm({ student, onSuccess, onError }: Props) {
   const [parentPhone, setParentPhone] = useState(student?.parentPhone || "");
   const [level, setLevel] = useState(student?.level || "");
   const [notes, setNotes] = useState(student?.notes || "");
+  const [status, setStatus] = useState(student?.status || "ACTIVE");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -35,7 +38,7 @@ export function StudentForm({ student, onSuccess, onError }: Props) {
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, age: age ? parseInt(age) : null, parentPhone, level, notes }),
+      body: JSON.stringify({ name, age: age ? parseInt(age) : null, parentPhone, level, notes, status }),
     });
     if (res.ok) onSuccess();
     else onError?.();
@@ -56,6 +59,17 @@ export function StudentForm({ student, onSuccess, onError }: Props) {
         <div className="space-y-2">
           <Label htmlFor="level">级别/阶段</Label>
           <Input id="level" value={level} onChange={(e) => setLevel(e.target.value)} placeholder="如：拜厄、车尔尼599" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="status">状态</Label>
+          <Select value={status} onValueChange={(v) => setStatus(v ?? "ACTIVE")}>
+            <SelectTrigger id="status"><SelectValue placeholder="选择状态" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ACTIVE">在读</SelectItem>
+              <SelectItem value="GRADUATED">毕业</SelectItem>
+              <SelectItem value="DROPPED">肄业</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <div className="space-y-2">

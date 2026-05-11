@@ -31,18 +31,26 @@ export default function StudentsPage() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState("ACTIVE");
+
+  const statusOptions = [
+    { value: "", label: "全部" },
+    { value: "ACTIVE", label: "在读" },
+    { value: "GRADUATED", label: "毕业" },
+    { value: "DROPPED", label: "肄业" },
+  ];
 
   async function fetchStudents() {
     setLoading(true);
     try {
-      const res = await fetch("/api/students");
+      const res = await fetch(`/api/students${statusFilter ? `?status=${statusFilter}` : ""}`);
       setData(await res.json());
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => { fetchStudents(); }, []);
+  useEffect(() => { fetchStudents(); }, [statusFilter]);
 
   async function handleDelete(id: string, name: string) {
     if (!window.confirm(`确定删除学生「${name}」？`)) return;
@@ -83,6 +91,19 @@ export default function StudentsPage() {
       <div className="relative mb-4">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input className="pl-9" placeholder="搜索学生姓名..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        {statusOptions.map(opt => (
+          <Button
+            key={opt.value}
+            variant={statusFilter === opt.value ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setStatusFilter(opt.value); }}
+          >
+            {opt.label}
+          </Button>
+        ))}
       </div>
 
       <div className="grid gap-3">

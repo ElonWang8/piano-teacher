@@ -38,6 +38,7 @@ interface StudentDetail {
   parentPhone: string | null;
   level: string | null;
   notes: string | null;
+  status?: string;
   lessons: Lesson[];
   payments: Payment[];
   totalLessons: number;
@@ -201,6 +202,7 @@ export default function StudentDetailPage() {
               <div className="flex justify-between"><span className="text-muted-foreground">姓名</span><span>{student.name}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">年龄</span><span>{student.age || "-"}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">级别</span><span>{student.level || "-"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">状态</span><span>{student.status === "ACTIVE" ? "在读" : student.status === "GRADUATED" ? "毕业" : "肄业"}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">家长手机</span><span>{student.parentPhone || "-"}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">备注</span><span>{student.notes || "-"}</span></div>
             </CardContent>
