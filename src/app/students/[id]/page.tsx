@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { StudentForm } from "@/components/students/student-form";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Pencil } from "lucide-react";
 
 interface Lesson {
@@ -47,6 +49,7 @@ export default function StudentDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
+  const toast = useToast();
   const [student, setStudent] = useState<StudentDetail | null>(null);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -58,7 +61,11 @@ export default function StudentDetailPage() {
   useEffect(() => { fetchStudent(); }, [id]);
 
   if (!student) {
-    return <div className="flex items-center justify-center h-64 text-muted-foreground">加载中...</div>;
+    return (
+      <div className="p-6">
+        <Skeleton type="form" count={1} />
+      </div>
+    );
   }
 
   return (
@@ -76,7 +83,11 @@ export default function StudentDetailPage() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader><DialogTitle>编辑学生</DialogTitle></DialogHeader>
-                <StudentForm student={student} onSuccess={() => { setEditOpen(false); fetchStudent(); }} />
+                <StudentForm
+                  student={student}
+                  onSuccess={() => { setEditOpen(false); fetchStudent(); toast.success("学生信息已更新"); }}
+                  onError={() => toast.error("更新失败")}
+                />
               </DialogContent>
             </Dialog>
           </div>

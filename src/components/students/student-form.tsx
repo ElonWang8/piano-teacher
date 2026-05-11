@@ -16,9 +16,10 @@ interface Props {
     notes: string | null;
   };
   onSuccess: () => void;
+  onError?: () => void;
 }
 
-export function StudentForm({ student, onSuccess }: Props) {
+export function StudentForm({ student, onSuccess, onError }: Props) {
   const [name, setName] = useState(student?.name || "");
   const [age, setAge] = useState(student?.age?.toString() || "");
   const [parentPhone, setParentPhone] = useState(student?.parentPhone || "");
@@ -37,6 +38,7 @@ export function StudentForm({ student, onSuccess }: Props) {
       body: JSON.stringify({ name, age: age ? parseInt(age) : null, parentPhone, level, notes }),
     });
     if (res.ok) onSuccess();
+    else onError?.();
     setLoading(false);
   }
 
