@@ -27,7 +27,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-56 h-screen bg-card border-r flex flex-col">
+    <aside className="hidden md:flex w-56 h-screen bg-card border-r flex flex-col">
       <div className="p-4 border-b">
         <h1 className="text-lg font-bold tracking-tight">PianoRecord</h1>
       </div>

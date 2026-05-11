@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
+import { BottomNav } from "@/components/layout/bottom-nav";
+import { SessionProvider } from "@/components/providers/session-provider";
 import { auth } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -32,16 +34,19 @@ export default async function RootLayout({
       lang="zh-CN"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        {session?.user ? (
-          <div className="flex h-screen">
-            <Sidebar />
-            <main className="flex-1 overflow-auto p-6">{children}</main>
-          </div>
-        ) : (
-          <main className="min-h-screen">{children}</main>
-        )}
-        <Toaster />
+      <body className="min-h-full flex flex-col pb-14 md:pb-0">
+        <SessionProvider>
+          {session?.user ? (
+            <div className="flex h-screen">
+              <Sidebar />
+              <main className="flex-1 overflow-auto p-3 md:p-6">{children}</main>
+            </div>
+          ) : (
+            <main className="min-h-screen">{children}</main>
+          )}
+          {session?.user && <BottomNav />}
+          <Toaster />
+        </SessionProvider>
       </body>
     </html>
   );
