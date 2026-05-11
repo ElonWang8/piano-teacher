@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    container_name: piano-teacher
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/prisma
+    environment:
+      - DATABASE_URL=file:/app/prisma/dev.db
+      - AUTH_SECRET=${AUTH_SECRET:-change-me-to-a-random-string}
+    # 启动时自动同步数据库结构
+    command: sh -c "npx prisma db push --skip-generate && node server.js"

@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.worktrees
+.claude
+.superpowers
+docs
+*.md
+!README.md
+.env
+.env.example
+.gitignore
