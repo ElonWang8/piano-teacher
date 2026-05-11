@@ -13,7 +13,10 @@ import {
   DollarSign,
   Percent,
   BookOpen,
+  BarChart3,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface TodaySchedule {
   id: string;
@@ -64,17 +67,23 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
-        加载中...
+      <div className="space-y-8">
+        <h1 className="text-2xl font-bold tracking-tight">数据看板</h1>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Skeleton type="card" count={3} />
+        </div>
+        <Skeleton type="card" count={3} />
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
-        数据加载失败
-      </div>
+      <EmptyState
+        icon={<BarChart3 size={48} />}
+        title="暂无数据"
+        description="开始添加学生和课程记录吧"
+      />
     );
   }
 
