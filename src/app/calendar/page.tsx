@@ -21,7 +21,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Plus, Clock, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Clock, User, Calendar } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorMessage } from "@/components/ui/error-message";
 import {
   format,
   startOfMonth,
@@ -65,6 +69,8 @@ function toDateKey(iso: string) {
 // ---------- page ----------
 
 export default function CalendarPage() {
+  const toast = useToast();
+
   // ---- calendar state ----
   const [currentMonth, setCurrentMonth] = useState(() =>
     startOfMonth(new Date()),
@@ -73,6 +79,8 @@ export default function CalendarPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   // ---- form state ----
   const [formStudentId, setFormStudentId] = useState("");
@@ -111,6 +119,7 @@ export default function CalendarPage() {
 
   // ---- data fetching ----
   const fetchSchedules = useCallback(async () => {
+    setLoading(true);
     const monthStr = format(currentMonth, "yyyy-MM");
     try {
       const res = await fetch(`/api/schedules?month=${monthStr}`);
@@ -119,6 +128,8 @@ export default function CalendarPage() {
       else setSchedules([]);
     } catch {
       setSchedules([]);
+    } finally {
+      setLoading(false);
     }
   }, [currentMonth]);
 
@@ -157,23 +168,35 @@ export default function CalendarPage() {
 
   async function handleAddSchedule(e: React.FormEvent) {
     e.preventDefault();
-    if (!formStudentId) return;
+    setError("");
 
-    const res = await fetch("/api/schedules", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        studentId: formStudentId,
-        date: formDate,
-        startTime: formStartTime,
-        durationMinutes: parseInt(formDuration, 10),
-      }),
-    });
+    if (!formStudentId) {
+      setError("请选择学生");
+      return;
+    }
 
-    if (res.ok) {
-      setDialogOpen(false);
-      setFormStudentId("");
-      fetchSchedules();
+    try {
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: formStudentId,
+          date: formDate,
+          startTime: formStartTime,
+          durationMinutes: parseInt(formDuration, 10),
+        }),
+      });
+
+      if (res.ok) {
+        toast.success("排课已添加");
+        setDialogOpen(false);
+        setFormStudentId("");
+        fetchSchedules();
+      } else {
+        toast.error("添加排课失败");
+      }
+    } catch {
+      toast.error("添加排课失败，请重试");
     }
   }
 
@@ -183,6 +206,98 @@ export default function CalendarPage() {
     : "";
 
   // ====================== render ======================
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <Skeleton type="card" count={1} />
+      </div>
+    );
+  }
+
+  if (schedules.length === 0) {
+    return (
+      <EmptyState
+        icon={<Calendar size={48} />}
+        title="暂无排课"
+        description="点击右上角「添加排课」安排课程"
+        action={
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger
+              render={
+                <Button>
+                  <Plus size={16} className="mr-1" />
+                  添加排课
+                </Button>
+              }
+            />
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>添加排课</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleAddSchedule} className="space-y-4">
+                <ErrorMessage message={error} />
+                {/* student */}
+                <div className="space-y-2">
+                  <Label>学生 *</Label>
+                  <Select
+                    value={formStudentId}
+                    onValueChange={(v) => setFormStudentId(v ?? "")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="选择学生" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {students.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* date */}
+                <div className="space-y-2">
+                  <Label>日期 *</Label>
+                  <Input
+                    type="date"
+                    value={formDate}
+                    onChange={(e) => setFormDate(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* time + duration */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>时间</Label>
+                    <Input
+                      type="time"
+                      value={formStartTime}
+                      onChange={(e) => setFormStartTime(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>时长（分钟）</Label>
+                    <Input
+                      type="number"
+                      value={formDuration}
+                      onChange={(e) => setFormDuration(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full">
+                  保存排课
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        }
+      />
+    );
+  }
 
   return (
     <div className="flex gap-6 h-full">
@@ -216,6 +331,7 @@ export default function CalendarPage() {
                 <DialogTitle>添加排课</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleAddSchedule} className="space-y-4">
+                <ErrorMessage message={error} />
                 {/* student */}
                 <div className="space-y-2">
                   <Label>学生 *</Label>
