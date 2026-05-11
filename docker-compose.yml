@@ -10,5 +10,5 @@ services:
     environment:
       - DATABASE_URL=file:/app/prisma/dev.db
       - AUTH_SECRET=${AUTH_SECRET:-change-me-to-a-random-string}
-    # 启动时自动同步数据库结构（用 node 直接执行 prisma，避免 npx 找不到的问题）
-    command: sh -c "node node_modules/prisma/build/index.js db push --skip-generate && node server.js"
+    # 启动时自动同步数据库
+    command: sh -c "npx prisma db push --skip-generate && node server.js"
