@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -140,7 +140,11 @@ export default function PaymentsPage() {
               <div className="space-y-2">
                 <Label>学生 *</Label>
                 <Select value={studentId} onValueChange={(v) => setStudentId(v ?? "")}>
-                  <SelectTrigger><SelectValue placeholder="选择学生" /></SelectTrigger>
+                  <SelectTrigger>
+                    <span className={studentId ? "" : "text-muted-foreground"}>
+                      {students.find(s => s.id === studentId)?.name || "选择学生"}
+                    </span>
+                  </SelectTrigger>
                   <SelectContent>
                     {students.map((s) => (
                       <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
