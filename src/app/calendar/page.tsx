@@ -14,13 +14,25 @@ import {
 } from "@/components/ui/select";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Plus, Clock, User, Calendar } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Clock,
+  User,
+  Calendar,
+  ListPlus,
+  Pencil,
+  CheckCheck,
+  UserX,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -58,6 +70,17 @@ interface Schedule {
 
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
 
+/** T4 weekday labels starting from Monday */
+const BATCH_WEEKDAYS = [
+  { day: 1, label: "一" },
+  { day: 2, label: "二" },
+  { day: 3, label: "三" },
+  { day: 4, label: "四" },
+  { day: 5, label: "五" },
+  { day: 6, label: "六" },
+  { day: 0, label: "日" },
+];
+
 // ---------- helpers ----------
 
 /** Extract yyyy-MM-dd from an ISO date string without timezone shifts */
@@ -77,17 +100,32 @@ export default function CalendarPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [singleDialogOpen, setSingleDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ---- form state ----
+  // ---- single-add form state ----
   const [formStudentId, setFormStudentId] = useState("");
-  const [formDate, setFormDate] = useState(
-    format(new Date(), "yyyy-MM-dd"),
-  );
+  const [formDate, setFormDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [formStartTime, setFormStartTime] = useState("09:00");
   const [formDuration, setFormDuration] = useState("45");
+
+  // ---- T4: batch dialog state ----
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+  const [batchStudentId, setBatchStudentId] = useState("");
+  const [batchStartDate, setBatchStartDate] = useState("");
+  const [batchEndDate, setBatchEndDate] = useState("");
+  const [batchWeekdays, setBatchWeekdays] = useState<number[]>([]);
+  const [batchStartTime, setBatchStartTime] = useState("18:00");
+  const [batchDuration, setBatchDuration] = useState("45");
+  const [batchError, setBatchError] = useState("");
+
+  // ---- T5: edit dialog state ----
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
+  const [editDate, setEditDate] = useState("");
+  const [editStartTime, setEditStartTime] = useState("");
+  const [editDuration, setEditDuration] = useState("");
 
   // ---- derived: calendar grid days ----
   const calendarDays = useMemo(() => {
@@ -115,6 +153,20 @@ export default function CalendarPage() {
     const key = format(selectedDate, "yyyy-MM-dd");
     return schedulesByDate[key] ?? [];
   }, [selectedDate, schedulesByDate]);
+
+  // ---- T4: batch preview ----
+  const batchPreviewCount = useMemo(() => {
+    if (!batchStartDate || !batchEndDate || batchWeekdays.length === 0)
+      return 0;
+    let count = 0;
+    const cursor = new Date(batchStartDate);
+    const end = new Date(batchEndDate);
+    while (cursor <= end) {
+      if (batchWeekdays.includes(cursor.getDay())) count++;
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return count;
+  }, [batchStartDate, batchEndDate, batchWeekdays]);
 
   // ---- data fetching ----
   const fetchSchedules = useCallback(async () => {
@@ -188,7 +240,7 @@ export default function CalendarPage() {
 
       if (res.ok) {
         toast.success("排课已添加");
-        setDialogOpen(false);
+        setSingleDialogOpen(false);
         setFormStudentId("");
         fetchSchedules();
       } else {
@@ -196,6 +248,117 @@ export default function CalendarPage() {
       }
     } catch {
       toast.error("添加排课失败，请重试");
+    }
+  }
+
+  // ---- T4: batch schedule ----
+  function toggleBatchWeekday(day: number) {
+    setBatchWeekdays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
+    );
+  }
+
+  async function handleBatchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setBatchError("");
+
+    if (!batchStudentId) {
+      setBatchError("请选择学生");
+      return;
+    }
+    if (!batchStartDate || !batchEndDate) {
+      setBatchError("请选择开始和结束日期");
+      return;
+    }
+    if (batchWeekdays.length === 0) {
+      setBatchError("请至少选择一个星期");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/schedules/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: batchStudentId,
+          startDate: batchStartDate,
+          endDate: batchEndDate,
+          weekdays: batchWeekdays,
+          startTime: batchStartTime,
+          durationMinutes: parseInt(batchDuration, 10),
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`成功生成 ${data.count} 节排课`);
+        setBatchDialogOpen(false);
+        setBatchStudentId("");
+        setBatchStartDate("");
+        setBatchEndDate("");
+        setBatchWeekdays([]);
+        fetchSchedules();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "批量排课失败");
+      }
+    } catch {
+      toast.error("批量排课失败，请重试");
+    }
+  }
+
+  // ---- T5: check-in / leave ----
+  async function handleAction(scheduleId: string, action: "ATTEND" | "LEAVE") {
+    try {
+      const res = await fetch(`/api/schedules/${scheduleId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (res.ok) {
+        toast.success(action === "ATTEND" ? "已签到" : "已请假");
+        fetchSchedules();
+      } else {
+        toast.error("操作失败");
+      }
+    } catch {
+      toast.error("操作失败，请重试");
+    }
+  }
+
+  // ---- T5: edit schedule ----
+  function openEditDialog(schedule: Schedule) {
+    setEditingSchedule(schedule);
+    setEditDate(format(new Date(schedule.date), "yyyy-MM-dd"));
+    setEditStartTime(schedule.startTime);
+    setEditDuration(String(schedule.durationMinutes));
+    setEditDialogOpen(true);
+  }
+
+  async function handleEditSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingSchedule) return;
+
+    try {
+      const res = await fetch(`/api/schedules/${editingSchedule.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: editDate,
+          startTime: editStartTime,
+          durationMinutes: parseInt(editDuration, 10),
+        }),
+      });
+      if (res.ok) {
+        toast.success("排课已更新");
+        setEditDialogOpen(false);
+        setEditingSchedule(null);
+        fetchSchedules();
+      } else {
+        toast.error("更新失败");
+      }
+    } catch {
+      toast.error("更新失败，请重试");
     }
   }
 
@@ -219,82 +382,212 @@ export default function CalendarPage() {
       <EmptyState
         icon={<Calendar size={48} />}
         title="暂无排课"
-        description="点击右上角「添加排课」安排课程"
+        description="点击「添加排课」安排单节课，或使用「批量排课」快速安排多节"
         action={
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger
-              render={
-                <Button>
-                  <Plus size={16} className="mr-1" />
-                  添加排课
-                </Button>
-              }
-            />
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>添加排课</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleAddSchedule} className="space-y-4">
-                <ErrorMessage message={error} />
-                {/* student */}
-                <div className="space-y-2">
-                  <Label>学生 *</Label>
-                  <Select
-                    value={formStudentId}
-                    onValueChange={(v) => setFormStudentId(v ?? "")}
-                  >
-                    <SelectTrigger>
-                      <span className={formStudentId ? "" : "text-muted-foreground"}>
-                        {students.find(s => s.id === formStudentId)?.name || "选择学生"}
-                      </span>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {students.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* date */}
-                <div className="space-y-2">
-                  <Label>日期 *</Label>
-                  <Input
-                    type="date"
-                    value={formDate}
-                    onChange={(e) => setFormDate(e.target.value)}
-                    required
-                  />
-                </div>
-
-                {/* time + duration */}
-                <div className="grid grid-cols-2 gap-4">
+          <div className="flex gap-2">
+            {/* single add dialog */}
+            <Dialog open={singleDialogOpen} onOpenChange={setSingleDialogOpen}>
+              <DialogTrigger
+                render={
+                  <Button>
+                    <Plus size={16} className="mr-1" />
+                    添加排课
+                  </Button>
+                }
+              />
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>添加排课</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddSchedule} className="space-y-4">
+                  <ErrorMessage message={error} />
                   <div className="space-y-2">
-                    <Label>时间</Label>
-                    <Input
-                      type="time"
-                      value={formStartTime}
-                      onChange={(e) => setFormStartTime(e.target.value)}
-                    />
+                    <Label>学生 *</Label>
+                    <Select
+                      value={formStudentId}
+                      onValueChange={(v) => setFormStudentId(v ?? "")}
+                    >
+                      <SelectTrigger>
+                        <span
+                          className={
+                            formStudentId ? "" : "text-muted-foreground"
+                          }
+                        >
+                          {students.find((s) => s.id === formStudentId)
+                            ?.name || "选择学生"}
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {students.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>时长（分钟）</Label>
+                    <Label>日期 *</Label>
                     <Input
-                      type="number"
-                      value={formDuration}
-                      onChange={(e) => setFormDuration(e.target.value)}
+                      type="date"
+                      value={formDate}
+                      onChange={(e) => setFormDate(e.target.value)}
+                      required
                     />
                   </div>
-                </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>时间</Label>
+                      <Input
+                        type="time"
+                        value={formStartTime}
+                        onChange={(e) => setFormStartTime(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>时长（分钟）</Label>
+                      <Input
+                        type="number"
+                        value={formDuration}
+                        onChange={(e) => setFormDuration(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full">
+                    保存排课
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
 
-                <Button type="submit" className="w-full">
-                  保存排课
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+            {/* T4: batch schedule dialog */}
+            <Dialog open={batchDialogOpen} onOpenChange={setBatchDialogOpen}>
+              <DialogTrigger
+                render={
+                  <Button variant="outline">
+                    <ListPlus size={16} className="mr-1" />
+                    批量排课
+                  </Button>
+                }
+              />
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>批量排课</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleBatchSubmit} className="space-y-4">
+                  <ErrorMessage message={batchError} />
+                  {/* student */}
+                  <div className="space-y-2">
+                    <Label>学生 *</Label>
+                    <Select
+                      value={batchStudentId}
+                      onValueChange={(v) => setBatchStudentId(v ?? "")}
+                    >
+                      <SelectTrigger>
+                        <span
+                          className={
+                            batchStudentId ? "" : "text-muted-foreground"
+                          }
+                        >
+                          {students.find((s) => s.id === batchStudentId)
+                            ?.name || "选择学生"}
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {students.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* date range */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>开始日期 *</Label>
+                      <Input
+                        type="date"
+                        value={batchStartDate}
+                        onChange={(e) => setBatchStartDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>结束日期 *</Label>
+                      <Input
+                        type="date"
+                        value={batchEndDate}
+                        onChange={(e) => setBatchEndDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* weekday toggle */}
+                  <div className="space-y-2">
+                    <Label>重复星期 *</Label>
+                    <div className="flex gap-1.5">
+                      {BATCH_WEEKDAYS.map(({ day, label }) => {
+                        const selected = batchWeekdays.includes(day);
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => toggleBatchWeekday(day)}
+                            className={cn(
+                              "w-9 h-9 rounded-full text-sm font-medium border transition-colors",
+                              selected
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-background text-muted-foreground border-input hover:border-primary/50",
+                            )}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* time + duration */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>时间</Label>
+                      <Input
+                        type="time"
+                        value={batchStartTime}
+                        onChange={(e) => setBatchStartTime(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>时长（分钟）</Label>
+                      <Input
+                        type="number"
+                        value={batchDuration}
+                        onChange={(e) => setBatchDuration(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* preview */}
+                  {batchPreviewCount > 0 && (
+                    <p className="text-sm text-muted-foreground text-center">
+                      预计生成{" "}
+                      <span className="font-semibold text-foreground">
+                        {batchPreviewCount}
+                      </span>{" "}
+                      节课
+                    </p>
+                  )}
+
+                  <Button type="submit" className="w-full">
+                    生成排课
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         }
       />
     );
@@ -304,7 +597,7 @@ export default function CalendarPage() {
     <div className="flex gap-6 h-full">
       {/* ======== left: calendar ======== */}
       <div className="flex flex-1 flex-col min-w-0">
-        {/* --- month nav + add button --- */}
+        {/* --- month nav + add / batch buttons --- */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon-sm" onClick={goPrevMonth}>
@@ -318,80 +611,216 @@ export default function CalendarPage() {
             </Button>
           </div>
 
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger
-              render={
-                <Button>
-                  <Plus size={16} className="mr-1" />
-                  添加排课
-                </Button>
-              }
-            />
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>添加排课</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleAddSchedule} className="space-y-4">
-                <ErrorMessage message={error} />
-                {/* student */}
-                <div className="space-y-2">
-                  <Label>学生 *</Label>
-                  <Select
-                    value={formStudentId}
-                    onValueChange={(v) => setFormStudentId(v ?? "")}
-                  >
-                    <SelectTrigger>
-                      <span className={formStudentId ? "" : "text-muted-foreground"}>
-                        {students.find(s => s.id === formStudentId)?.name || "选择学生"}
-                      </span>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {students.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* date */}
-                <div className="space-y-2">
-                  <Label>日期 *</Label>
-                  <Input
-                    type="date"
-                    value={formDate}
-                    onChange={(e) => setFormDate(e.target.value)}
-                    required
-                  />
-                </div>
-
-                {/* time + duration */}
-                <div className="grid grid-cols-2 gap-4">
+          <div className="flex items-center gap-2">
+            {/* T4: batch schedule button */}
+            <Dialog open={batchDialogOpen} onOpenChange={setBatchDialogOpen}>
+              <DialogTrigger
+                render={
+                  <Button variant="outline">
+                    <ListPlus size={16} className="mr-1" />
+                    批量排课
+                  </Button>
+                }
+              />
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>批量排课</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleBatchSubmit} className="space-y-4">
+                  <ErrorMessage message={batchError} />
+                  {/* student */}
                   <div className="space-y-2">
-                    <Label>时间</Label>
+                    <Label>学生 *</Label>
+                    <Select
+                      value={batchStudentId}
+                      onValueChange={(v) => setBatchStudentId(v ?? "")}
+                    >
+                      <SelectTrigger>
+                        <span
+                          className={
+                            batchStudentId ? "" : "text-muted-foreground"
+                          }
+                        >
+                          {students.find((s) => s.id === batchStudentId)
+                            ?.name || "选择学生"}
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {students.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* date range */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>开始日期 *</Label>
+                      <Input
+                        type="date"
+                        value={batchStartDate}
+                        onChange={(e) => setBatchStartDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>结束日期 *</Label>
+                      <Input
+                        type="date"
+                        value={batchEndDate}
+                        onChange={(e) => setBatchEndDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* weekday toggle */}
+                  <div className="space-y-2">
+                    <Label>重复星期 *</Label>
+                    <div className="flex gap-1.5">
+                      {BATCH_WEEKDAYS.map(({ day, label }) => {
+                        const selected = batchWeekdays.includes(day);
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => toggleBatchWeekday(day)}
+                            className={cn(
+                              "w-9 h-9 rounded-full text-sm font-medium border transition-colors",
+                              selected
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-background text-muted-foreground border-input hover:border-primary/50",
+                            )}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* time + duration */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>时间</Label>
+                      <Input
+                        type="time"
+                        value={batchStartTime}
+                        onChange={(e) => setBatchStartTime(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>时长（分钟）</Label>
+                      <Input
+                        type="number"
+                        value={batchDuration}
+                        onChange={(e) => setBatchDuration(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* preview */}
+                  {batchPreviewCount > 0 && (
+                    <p className="text-sm text-muted-foreground text-center">
+                      预计生成{" "}
+                      <span className="font-semibold text-foreground">
+                        {batchPreviewCount}
+                      </span>{" "}
+                      节课
+                    </p>
+                  )}
+
+                  <Button type="submit" className="w-full">
+                    生成排课
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            {/* single add schedule */}
+            <Dialog open={singleDialogOpen} onOpenChange={setSingleDialogOpen}>
+              <DialogTrigger
+                render={
+                  <Button>
+                    <Plus size={16} className="mr-1" />
+                    添加排课
+                  </Button>
+                }
+              />
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>添加排课</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddSchedule} className="space-y-4">
+                  <ErrorMessage message={error} />
+                  {/* student */}
+                  <div className="space-y-2">
+                    <Label>学生 *</Label>
+                    <Select
+                      value={formStudentId}
+                      onValueChange={(v) => setFormStudentId(v ?? "")}
+                    >
+                      <SelectTrigger>
+                        <span
+                          className={
+                            formStudentId ? "" : "text-muted-foreground"
+                          }
+                        >
+                          {students.find((s) => s.id === formStudentId)
+                            ?.name || "选择学生"}
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {students.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* date */}
+                  <div className="space-y-2">
+                    <Label>日期 *</Label>
                     <Input
-                      type="time"
-                      value={formStartTime}
-                      onChange={(e) => setFormStartTime(e.target.value)}
+                      type="date"
+                      value={formDate}
+                      onChange={(e) => setFormDate(e.target.value)}
+                      required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>时长（分钟）</Label>
-                    <Input
-                      type="number"
-                      value={formDuration}
-                      onChange={(e) => setFormDuration(e.target.value)}
-                    />
-                  </div>
-                </div>
 
-                <Button type="submit" className="w-full">
-                  保存排课
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+                  {/* time + duration */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>时间</Label>
+                      <Input
+                        type="time"
+                        value={formStartTime}
+                        onChange={(e) => setFormStartTime(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>时长（分钟）</Label>
+                      <Input
+                        type="number"
+                        value={formDuration}
+                        onChange={(e) => setFormDuration(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <Button type="submit" className="w-full">
+                    保存排课
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* --- weekday headers --- */}
@@ -480,9 +909,12 @@ export default function CalendarPage() {
                   .sort((a, b) => a.startTime.localeCompare(b.startTime))
                   .map((s) => (
                     <Card key={s.id} size="sm">
-                      <CardContent className="py-3 space-y-1.5">
+                      <CardContent className="py-3 space-y-2">
                         <div className="flex items-center gap-2 font-medium text-sm">
-                          <Clock size={14} className="text-muted-foreground" />
+                          <Clock
+                            size={14}
+                            className="text-muted-foreground"
+                          />
                           {s.startTime}
                           <Badge variant="secondary" className="ml-auto">
                             {s.durationMinutes}分钟
@@ -497,6 +929,37 @@ export default function CalendarPage() {
                             重复规则：{s.repeatRule}
                           </p>
                         )}
+
+                        {/* T5: action buttons */}
+                        <div className="flex gap-1 pt-1 border-t border-border/50">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => handleAction(s.id, "ATTEND")}
+                          >
+                            <CheckCheck size={12} className="mr-1" />
+                            签到
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => handleAction(s.id, "LEAVE")}
+                          >
+                            <UserX size={12} className="mr-1" />
+                            请假
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs ml-auto"
+                            onClick={() => openEditDialog(s)}
+                          >
+                            <Pencil size={12} className="mr-1" />
+                            编辑
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -509,6 +972,58 @@ export default function CalendarPage() {
           </div>
         )}
       </div>
+
+      {/* T5: edit schedule dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>编辑排课</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            {/* date */}
+            <div className="space-y-2">
+              <Label>日期</Label>
+              <Input
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* time + duration */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>时间</Label>
+                <Input
+                  type="time"
+                  value={editStartTime}
+                  onChange={(e) => setEditStartTime(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>时长（分钟）</Label>
+                <Input
+                  type="number"
+                  value={editDuration}
+                  onChange={(e) => setEditDuration(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <DialogClose
+                render={
+                  <Button variant="outline" type="button">
+                    取消
+                  </Button>
+                }
+              />
+              <Button type="submit">保存修改</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
