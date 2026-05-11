@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -113,7 +113,11 @@ export default function LessonsPage() {
         <div className="flex items-center gap-3">
           <Select value={filterStudent} onValueChange={(v) => setFilterStudent(v ?? "all")}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="筛选学生" />
+              <span className={filterStudent !== "all" ? "" : "text-muted-foreground"}>
+                {filterStudent !== "all"
+                  ? students.find(s => s.id === filterStudent)?.name || "未知学生"
+                  : "全部学生"}
+              </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部学生</SelectItem>
@@ -131,7 +135,11 @@ export default function LessonsPage() {
                 <div className="space-y-2">
                   <Label>学生 *</Label>
                   <Select value={studentId} onValueChange={(v) => setStudentId(v ?? "")}>
-                    <SelectTrigger><SelectValue placeholder="选择学生" /></SelectTrigger>
+                    <SelectTrigger>
+                      <span className={studentId ? "" : "text-muted-foreground"}>
+                        {students.find(s => s.id === studentId)?.name || "选择学生"}
+                      </span>
+                    </SelectTrigger>
                     <SelectContent>
                       {students.map((s) => (
                         <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
@@ -157,7 +165,9 @@ export default function LessonsPage() {
                   <div className="space-y-2">
                     <Label>状态</Label>
                     <Select value={status} onValueChange={(v) => setStatus(v ?? "ATTENDED")}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger>
+                        <span>{statusLabels[status] || status}</span>
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="ATTENDED">已上课</SelectItem>
                         <SelectItem value="ABSENT">旷课</SelectItem>
