@@ -5,7 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+
+const STATUS_LABELS: Record<string, string> = {
+  ACTIVE: "在读",
+  GRADUATED: "毕业",
+  DROPPED: "肄业",
+};
 
 interface Props {
   student?: {
@@ -63,7 +69,9 @@ export function StudentForm({ student, onSuccess, onError }: Props) {
         <div className="space-y-2">
           <Label htmlFor="status">状态</Label>
           <Select value={status} onValueChange={(v) => setStatus(v ?? "ACTIVE")}>
-            <SelectTrigger id="status"><SelectValue placeholder="选择状态" /></SelectTrigger>
+            <SelectTrigger id="status">
+              <span>{STATUS_LABELS[status] || status}</span>
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="ACTIVE">在读</SelectItem>
               <SelectItem value="GRADUATED">毕业</SelectItem>
