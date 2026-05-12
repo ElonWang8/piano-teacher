@@ -2,8 +2,17 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CalendarGrid } from "@/components/calendar/calendar-grid";
@@ -153,23 +162,63 @@ export default function CalendarPage() {
     setSelectedDate(date);
   }
 
-  // ---- check-in / leave ----
-  async function handleAction(scheduleId: string, action: "ATTEND" | "LEAVE") {
+  // ---- check-in dialog ----
+  const [checkinSchedule, setCheckinSchedule] = useState<Schedule | null>(null);
+  const [checkinOpen, setCheckinOpen] = useState(false);
+  const [checkinRepertoire, setCheckinRepertoire] = useState("");
+  const [checkinNotes, setCheckinNotes] = useState("");
+  const [checkinHomework, setCheckinHomework] = useState("");
+  const [checkinLoading, setCheckinLoading] = useState(false);
+
+  function openCheckin(schedule: Schedule) {
+    setCheckinSchedule(schedule);
+    setCheckinRepertoire("");
+    setCheckinNotes("");
+    setCheckinHomework("");
+    setCheckinOpen(true);
+  }
+
+  async function handleCheckinSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!checkinSchedule) return;
+    setCheckinLoading(true);
     try {
-      const res = await fetch(`/api/schedules/${scheduleId}`, {
+      const res = await fetch(`/api/schedules/${checkinSchedule.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({
+          action: "ATTEND",
+          repertoire: checkinRepertoire,
+          notes: checkinNotes,
+          homework: checkinHomework,
+        }),
       });
       if (res.ok) {
-        toast.success(action === "ATTEND" ? "已签到" : "已请假");
+        toast.success("已签到");
+        setCheckinOpen(false);
         fetchSchedules();
       } else {
         toast.error("操作失败");
       }
     } catch {
       toast.error("操作失败，请重试");
+    } finally {
+      setCheckinLoading(false);
     }
+  }
+
+  // ---- leave ----
+  async function handleLeave(scheduleId: string) {
+    if (!window.confirm("确认请假？不会扣除课时")) return;
+    try {
+      const res = await fetch(`/api/schedules/${scheduleId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "LEAVE" }),
+      });
+      if (res.ok) { toast.success("已请假"); fetchSchedules(); }
+      else toast.error("操作失败");
+    } catch { toast.error("操作失败，请重试"); }
   }
 
   // ---- edit schedule ----
@@ -279,7 +328,7 @@ export default function CalendarPage() {
                             variant="ghost"
                             size="sm"
                             className="h-7 px-2 text-xs"
-                            onClick={() => handleAction(s.id, "ATTEND")}
+                            onClick={() => openCheckin(s)}
                           >
                             <CheckCheck size={12} className="mr-1" />
                             签到
@@ -288,7 +337,7 @@ export default function CalendarPage() {
                             variant="ghost"
                             size="sm"
                             className="h-7 px-2 text-xs"
-                            onClick={() => handleAction(s.id, "LEAVE")}
+                            onClick={() => handleLeave(s.id)}
                           >
                             <UserX size={12} className="mr-1" />
                             请假
@@ -315,6 +364,38 @@ export default function CalendarPage() {
           </div>
         )}
       </div>
+
+      {/* check-in dialog */}
+      <Dialog open={checkinOpen} onOpenChange={setCheckinOpen}>
+        <DialogContent className="max-md:!max-w-full max-md:!h-dvh max-md:!rounded-none max-md:m-0">
+          <DialogHeader><DialogTitle>签到确认</DialogTitle></DialogHeader>
+          {checkinSchedule && (
+            <form onSubmit={handleCheckinSubmit} className="space-y-4">
+              <div className="rounded-lg bg-muted p-3 text-sm space-y-1">
+                <div><span className="text-muted-foreground">学生：</span>{checkinSchedule.student.name}</div>
+                <div><span className="text-muted-foreground">日期：</span>{format(new Date(checkinSchedule.date), "yyyy年M月d日")} 周{WEEKDAYS[new Date(checkinSchedule.date).getDay()]}</div>
+                <div><span className="text-muted-foreground">时间：</span>{checkinSchedule.startTime} · {checkinSchedule.durationMinutes}分钟</div>
+              </div>
+              <div className="space-y-2">
+                <Label>曲目/练习内容</Label>
+                <Textarea value={checkinRepertoire} onChange={e => setCheckinRepertoire(e.target.value)} placeholder="如：拜厄 No.45、哈农 No.3" />
+              </div>
+              <div className="space-y-2">
+                <Label>掌握情况/备注</Label>
+                <Textarea value={checkinNotes} onChange={e => setCheckinNotes(e.target.value)} placeholder="手指独立性有进步..." />
+              </div>
+              <div className="space-y-2">
+                <Label>布置作业</Label>
+                <Textarea value={checkinHomework} onChange={e => setCheckinHomework(e.target.value)} placeholder="哈农 No.4 慢练" />
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" className="flex-1 min-h-[44px]" onClick={() => setCheckinOpen(false)}>取消</Button>
+                <Button type="submit" className="flex-1 min-h-[44px]" disabled={checkinLoading}>{checkinLoading ? "签到中..." : "确认签到"}</Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* edit schedule dialog */}
       <EditScheduleDialog

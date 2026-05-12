@@ -18,7 +18,7 @@ export async function PUT(
     return NextResponse.json({ error: "排课不存在" }, { status: 404 });
 
   const body = await req.json();
-  const { action } = body;
+  const { action, repertoire, notes, homework } = body;
 
   await db.lesson.create({
     data: {
@@ -27,6 +27,9 @@ export async function PUT(
       startTime: schedule.startTime,
       durationMinutes: schedule.durationMinutes,
       status: action === "ATTEND" ? "ATTENDED" : "LEAVE",
+      repertoire: repertoire || null,
+      notes: notes || null,
+      homework: homework || null,
     },
   });
 

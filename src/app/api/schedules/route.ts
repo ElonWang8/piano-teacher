@@ -9,15 +9,19 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const month = searchParams.get("month");
 
+  let dateFilter = {};
+
+  if (month) {
+    const [y, m] = month.split("-").map(Number);
+    const start = new Date(y, m - 1, 1);
+    const end = new Date(y, m, 1); // 下月1号
+    dateFilter = { date: { gte: start, lt: end } };
+  }
+
   const schedules = await db.schedule.findMany({
     where: {
       student: { userId: session.user.id },
-      ...(month ? {
-        date: {
-          gte: new Date(`${month}-01`),
-          lt: new Date(`${month}-31`),
-        },
-      } : {}),
+      ...dateFilter,
     },
     include: { student: { select: { name: true } } },
     orderBy: { date: "asc" },
