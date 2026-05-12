@@ -29,6 +29,7 @@ import {
   addMonths,
   subMonths,
 } from "date-fns";
+import { holidays } from "@/lib/holidays";
 
 // ---------- types ----------
 
@@ -227,6 +228,7 @@ export default function CalendarPage() {
           selectedDate={selectedDate}
           calendarDays={calendarDays}
           schedulesByDate={schedulesByDate}
+          holidays={holidays}
           onPrevMonth={goPrevMonth}
           onNextMonth={goNextMonth}
           onDateClick={handleDateClick}

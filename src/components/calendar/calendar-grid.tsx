@@ -30,6 +30,7 @@ interface CalendarGridProps {
   selectedDate: Date | null;
   calendarDays: Date[];
   schedulesByDate: Record<string, Schedule[]>;
+  holidays: Record<string, string>;
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onDateClick: (date: Date) => void;
@@ -40,6 +41,7 @@ export function CalendarGrid({
   selectedDate,
   calendarDays,
   schedulesByDate,
+  holidays,
   onPrevMonth,
   onNextMonth,
   onDateClick,
@@ -76,6 +78,7 @@ export function CalendarGrid({
         {calendarDays.map((day) => {
           const key = format(day, "yyyy-MM-dd");
           const daySchedules = schedulesByDate[key] ?? [];
+          const holidayName = holidays[key] ?? null;
           const inMonth = isSameMonth(day, currentMonth);
           const selected = selectedDate
             ? isSameDay(day, selectedDate)
@@ -87,6 +90,7 @@ export function CalendarGrid({
               key={key}
               type="button"
               onClick={() => onDateClick(day)}
+              title={holidayName || undefined}
               className={cn(
                 "flex flex-col items-center border-b border-r p-1 transition-colors hover:bg-accent/50 focus-visible:bg-accent/50 outline-none",
                 !inMonth && "bg-muted/30 text-muted-foreground/50",
@@ -101,10 +105,18 @@ export function CalendarGrid({
                   "inline-flex items-center justify-center w-6 h-6 text-xs rounded-full",
                   today && "bg-primary text-primary-foreground font-semibold",
                   selected && !today && "font-bold text-primary",
+                  holidayName && !today && "text-red-500 font-semibold",
                 )}
               >
                 {format(day, "d")}
               </span>
+
+              {/* holiday label */}
+              {holidayName && (
+                <span className="text-[10px] leading-none text-red-500 mt-0.5 truncate max-w-full">
+                  假
+                </span>
+              )}
 
               {/* schedule dots */}
               {daySchedules.length > 0 && (
