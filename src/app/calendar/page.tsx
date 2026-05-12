@@ -242,23 +242,6 @@ export default function CalendarPage() {
     );
   }
 
-  if (schedules.length === 0) {
-    return (
-      <EmptyState
-        icon={<Calendar size={48} />}
-        title="暂无排课"
-        description="点击「添加排课」安排单节课，或使用「批量排课」快速安排多节"
-        action={
-          <ScheduleDialogs
-            students={students}
-            selectedDate={selectedDate}
-            onRefresh={fetchSchedules}
-          />
-        }
-      />
-    );
-  }
-
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-full">
       {/* ======== left: calendar ======== */}
