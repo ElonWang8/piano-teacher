@@ -31,6 +31,7 @@ interface CalendarGridProps {
   calendarDays: Date[];
   schedulesByDate: Record<string, Schedule[]>;
   holidays: Record<string, string>;
+  workdays: Record<string, string>;
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onDateClick: (date: Date) => void;
@@ -42,6 +43,7 @@ export function CalendarGrid({
   calendarDays,
   schedulesByDate,
   holidays,
+  workdays,
   onPrevMonth,
   onNextMonth,
   onDateClick,
@@ -79,18 +81,20 @@ export function CalendarGrid({
           const key = format(day, "yyyy-MM-dd");
           const daySchedules = schedulesByDate[key] ?? [];
           const holidayName = holidays[key] ?? null;
+          const workdayReason = workdays[key] ?? null;
           const inMonth = isSameMonth(day, currentMonth);
           const selected = selectedDate
             ? isSameDay(day, selectedDate)
             : false;
           const today = isToday(day);
+          const tooltip = [holidayName, workdayReason].filter(Boolean).join(" · ") || undefined;
 
           return (
             <button
               key={key}
               type="button"
               onClick={() => onDateClick(day)}
-              title={holidayName || undefined}
+              title={tooltip}
               className={cn(
                 "flex flex-col items-center border-b border-r p-1 transition-colors hover:bg-accent/50 focus-visible:bg-accent/50 outline-none",
                 !inMonth && "bg-muted/30 text-muted-foreground/50",
@@ -106,15 +110,21 @@ export function CalendarGrid({
                   today && "bg-primary text-primary-foreground font-semibold",
                   selected && !today && "font-bold text-primary",
                   holidayName && !today && "text-red-500 font-semibold",
+                  workdayReason && !today && !holidayName && "text-amber-600 font-semibold",
                 )}
               >
                 {format(day, "d")}
               </span>
 
-              {/* holiday label */}
+              {/* holiday / workday label */}
               {holidayName && (
-                <span className="text-[10px] leading-none text-red-500 mt-0.5 truncate max-w-full">
-                  假
+                <span className="text-[10px] leading-none text-red-500 mt-0.5 truncate max-w-full px-0.5">
+                  {holidayName}
+                </span>
+              )}
+              {workdayReason && !holidayName && (
+                <span className="text-[9px] leading-none text-amber-600 mt-0.5 truncate max-w-full px-0.5">
+                  班
                 </span>
               )}
 
