@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { StudentForm } from "@/components/students/student-form";
+import { ProgressTimeline } from "@/components/students/progress-timeline";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Pencil } from "lucide-react";
@@ -37,6 +38,7 @@ interface StudentDetail {
   age: number | null;
   parentPhone: string | null;
   level: string | null;
+  startDate: string | null;
   notes: string | null;
   status?: string;
   lessons: Lesson[];
@@ -133,37 +135,7 @@ export default function StudentDetailPage() {
         </TabsContent>
 
         <TabsContent value="progress" className="mt-4">
-          <Card>
-            <CardContent className="py-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-primary">{student.totalLessons}</div>
-                  <div className="text-sm text-muted-foreground">总课时</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-green-600">{student.attendedLessons}</div>
-                  <div className="text-sm text-muted-foreground">已上课</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-orange-500">{student.remainingLessons}</div>
-                  <div className="text-sm text-muted-foreground">剩余课时</div>
-                </div>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">学习历程</h4>
-                <div className="space-y-2">
-                  {student.lessons.slice(0, 10).map((l) => (
-                    <div key={l.id} className="text-sm flex gap-3">
-                      <span className="text-muted-foreground w-24 shrink-0">
-                        {new Date(l.date).toLocaleDateString("zh-CN")}
-                      </span>
-                      <span>{l.repertoire || "无记录"}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ProgressTimeline lessons={student.lessons} startDate={student.startDate} level={student.level} />
         </TabsContent>
 
         <TabsContent value="payments" className="mt-4 space-y-6">
