@@ -23,4 +23,4 @@ docker compose up -d --build
 
 echo ""
 echo "=== 部署完成 ==="
-echo "访问: http://$(hostname -I 2>/dev/null | awk '{print $1}' || echo '你的NAS-IP'):4387"
+echo "访问: http://$(hostname -I 2>/dev/null | awk '{print $1}' || echo '你的NAS-IP'):14387"

@@ -4,7 +4,7 @@ services:
     container_name: piano-teacher
     restart: unless-stopped
     ports:
-      - "4387:3000"
+      - "14387:3000"
     volumes:
       - ./data:/app/data
     environment:
