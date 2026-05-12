@@ -14,7 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Plus, BookOpen, Pencil, CheckCheck, UserX, Calendar } from "lucide-react";
+import { Plus, BookOpen, Pencil, CheckCheck, UserX, Calendar, Copy } from "lucide-react";
 import { LessonForm, type LessonFormEditTarget } from "@/components/lessons/lesson-form";
 
 interface Student { id: string; name: string; }
@@ -165,6 +165,17 @@ export default function LessonsPage() {
     return new Date(d).toLocaleDateString("zh-CN");
   }
 
+  async function copyLesson(lesson: LessonItem) {
+    const text = `【PianoRecord 上课记录】
+学生：${lesson.student?.name || ""}
+日期：${new Date(lesson.date).toLocaleDateString("zh-CN")} ${lesson.startTime || ""}
+${lesson.repertoire ? `曲目：${lesson.repertoire}` : ""}
+${lesson.notes ? `掌握情况：${lesson.notes}` : ""}
+${lesson.homework ? `本周作业：${lesson.homework}` : ""}`.trim();
+    await navigator.clipboard.writeText(text);
+    toast.success("已复制，可粘贴发送给家长");
+  }
+
   return (
     <div>
       <h2 className="text-xl md:text-2xl font-bold mb-6">课程记录</h2>
@@ -294,6 +305,14 @@ export default function LessonsPage() {
                       <Badge variant={statusVariant(l.status)}>
                         {statusLabels[l.status]}
                       </Badge>
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        onClick={() => copyLesson(l)}
+                        title="复制上课记录"
+                      >
+                        <Copy size={14} />
+                      </Button>
                       <Button
                         size="icon-sm"
                         variant="ghost"

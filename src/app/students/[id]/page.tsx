@@ -11,7 +11,7 @@ import { StudentForm } from "@/components/students/student-form";
 import { ProgressTimeline } from "@/components/students/progress-timeline";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, Copy } from "lucide-react";
 
 interface Lesson {
   id: string;
@@ -62,6 +62,17 @@ export default function StudentDetailPage() {
   }
 
   useEffect(() => { fetchStudent(); }, [id]);
+
+  async function copyLesson(lesson: Lesson) {
+    const text = `【PianoRecord 上课记录】
+学生：${student?.name || ""}
+日期：${new Date(lesson.date).toLocaleDateString("zh-CN")} ${lesson.startTime || ""}
+${lesson.repertoire ? `曲目：${lesson.repertoire}` : ""}
+${lesson.notes ? `掌握情况：${lesson.notes}` : ""}
+${lesson.homework ? `本周作业：${lesson.homework}` : ""}`.trim();
+    await navigator.clipboard.writeText(text);
+    toast.success("已复制，可粘贴发送给家长");
+  }
 
   if (!student) {
     return (
@@ -124,9 +135,19 @@ export default function StudentDetailPage() {
                       {l.notes && <p className="text-sm text-muted-foreground mt-1">{l.notes}</p>}
                       {l.homework && <p className="text-sm mt-1">作业：{l.homework}</p>}
                     </div>
-                    <Badge variant={l.status === "ATTENDED" ? "default" : l.status === "ABSENT" ? "destructive" : "secondary"}>
-                      {l.status === "ATTENDED" ? "已上课" : l.status === "ABSENT" ? "旷课" : "请假"}
-                    </Badge>
+                    <div className="flex items-center gap-1 ml-2 shrink-0">
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        onClick={() => copyLesson(l)}
+                        title="复制上课记录"
+                      >
+                        <Copy size={14} />
+                      </Button>
+                      <Badge variant={l.status === "ATTENDED" ? "default" : l.status === "ABSENT" ? "destructive" : "secondary"}>
+                        {l.status === "ATTENDED" ? "已上课" : l.status === "ABSENT" ? "旷课" : "请假"}
+                      </Badge>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
