@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +26,8 @@ const statusLabels: Record<string, string> = {
   ABSENT: "旷课",
   LEAVE: "请假",
 };
+
+const PIANO_TAGS = ["小汤1","小汤2","小汤3","拜厄","车尔尼599","车尔尼849","车尔尼299","哈农","音阶练习"];
 
 export interface LessonFormEditTarget {
   id: string;
@@ -263,6 +266,22 @@ export function LessonForm({
               onChange={(e) => setRepertoire(e.target.value)}
               placeholder="如：拜厄 No.45、哈农 No.3"
             />
+            <div className="flex flex-wrap gap-1.5 mt-1">
+              {PIANO_TAGS.map(tag => (
+                <Badge
+                  key={tag}
+                  variant="outline"
+                  className="cursor-pointer hover:bg-accent"
+                  onClick={() => {
+                    const prev = repertoire;
+                    const parts = prev.split(/[、，,\n]/).map((s: string) => s.trim()).filter(Boolean);
+                    setRepertoire(parts.includes(tag) ? prev : (prev ? prev + "、" + tag : tag));
+                  }}
+                >
+                  + {tag}
+                </Badge>
+              ))}
+            </div>
           </div>
 
           {/* Notes */}
