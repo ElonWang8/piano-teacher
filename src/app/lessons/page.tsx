@@ -2,9 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,19 +10,12 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorMessage } from "@/components/ui/error-message";
 import { Plus, BookOpen, Pencil, CheckCheck, UserX, Calendar } from "lucide-react";
+import { LessonForm, type LessonFormEditTarget } from "@/components/lessons/lesson-form";
 
 interface Student { id: string; name: string; }
 
@@ -73,28 +63,9 @@ export default function LessonsPage() {
 
   // ---------- new record dialog ----------
   const [newOpen, setNewOpen] = useState(false);
-  const [studentId, setStudentId] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [startTime, setStartTime] = useState("09:00");
-  const [duration, setDuration] = useState("45");
-  const [repertoire, setRepertoire] = useState("");
-  const [lessonNotes, setLessonNotes] = useState("");
-  const [homework, setHomework] = useState("");
-  const [status, setStatus] = useState("ATTENDED");
-  const [error, setError] = useState("");
-  const [submitLoading, setSubmitLoading] = useState(false);
 
   // ---------- edit dialog ----------
-  const [editOpen, setEditOpen] = useState(false);
-  const [editing, setEditing] = useState<LessonItem | null>(null);
-  const [editRepertoire, setEditRepertoire] = useState("");
-  const [editNotes, setEditNotes] = useState("");
-  const [editHomework, setEditHomework] = useState("");
-  const [editStatus, setEditStatus] = useState("ATTENDED");
-  const [editStartTime, setEditStartTime] = useState("09:00");
-  const [editDuration, setEditDuration] = useState("45");
-  const [editError, setEditError] = useState("");
-  const [editLoading, setEditLoading] = useState(false);
+  const [editTarget, setEditTarget] = useState<LessonFormEditTarget | null>(null);
 
   // ---------- data fetching ----------
 
@@ -164,101 +135,20 @@ export default function LessonsPage() {
     }
   }
 
-  // ---------- new record submit ----------
-
-  async function handleNewSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-
-    if (!studentId) {
-      setError("请选择学生");
-      return;
-    }
-    if (!date) {
-      setError("请选择日期");
-      return;
-    }
-
-    setSubmitLoading(true);
-    try {
-      const res = await fetch("/api/lessons", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentId,
-          date,
-          startTime,
-          durationMinutes: parseInt(duration),
-          repertoire,
-          notes: lessonNotes,
-          homework,
-          status,
-        }),
-      });
-      if (res.ok) {
-        toast.success("课程记录已保存");
-        setNewOpen(false);
-        fetchLessons();
-        setRepertoire("");
-        setLessonNotes("");
-        setHomework("");
-      } else {
-        const d = await res.json();
-        setError(d.error || "保存失败");
-      }
-    } catch {
-      toast.error("保存失败，请重试");
-    } finally {
-      setSubmitLoading(false);
-    }
-  }
-
-  // ---------- edit ----------
+  // ---------- edit helper ----------
 
   function openEdit(lesson: LessonItem) {
-    setEditing(lesson);
-    setEditRepertoire(lesson.repertoire || "");
-    setEditNotes(lesson.notes || "");
-    setEditHomework(lesson.homework || "");
-    setEditStatus(lesson.status);
-    setEditStartTime(lesson.startTime);
-    setEditDuration(String(lesson.durationMinutes));
-    setEditError("");
-    setEditOpen(true);
-  }
-
-  async function handleEditSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!editing) return;
-    setEditError("");
-    setEditLoading(true);
-    try {
-      const res = await fetch(`/api/lessons/${editing.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          repertoire: editRepertoire,
-          notes: editNotes,
-          homework: editHomework,
-          status: editStatus,
-          startTime: editStartTime,
-          durationMinutes: parseInt(editDuration),
-        }),
-      });
-      if (res.ok) {
-        toast.success("课程记录已更新");
-        setEditOpen(false);
-        setEditing(null);
-        fetchLessons();
-      } else {
-        const d = await res.json();
-        setEditError(d.error || "更新失败");
-      }
-    } catch {
-      toast.error("更新失败，请重试");
-    } finally {
-      setEditLoading(false);
-    }
+    setEditTarget({
+      id: lesson.id,
+      date: lesson.date,
+      startTime: lesson.startTime,
+      durationMinutes: lesson.durationMinutes,
+      repertoire: lesson.repertoire,
+      notes: lesson.notes,
+      homework: lesson.homework,
+      status: lesson.status,
+      studentName: lesson.student.name,
+    });
   }
 
   // ---------- status badge variant ----------
@@ -360,125 +250,13 @@ export default function LessonsPage() {
               </SelectContent>
             </Select>
 
-            {/* ------ new record dialog ------ */}
-            <Dialog
-              open={newOpen}
-              onOpenChange={(v) => {
-                setNewOpen(v);
-                if (!v) setError("");
-              }}
+            <Button
+              className="min-h-[44px]"
+              onClick={() => setNewOpen(true)}
             >
-              <DialogTrigger
-                render={<Button className="min-h-[44px]"><Plus size={16} className="mr-1" />新增记录</Button>}
-              />
-              <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[90dvh] max-md:!rounded-lg">
-                <DialogHeader>
-                  <DialogTitle>新增课程记录</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleNewSubmit} className="space-y-4">
-                  <ErrorMessage message={error} />
-                  <div className="space-y-2">
-                    <Label>学生 *</Label>
-                    <Select
-                      value={studentId}
-                      onValueChange={(v) => setStudentId(v ?? "")}
-                    >
-                      <SelectTrigger>
-                        <span
-                          className={
-                            studentId ? "" : "text-muted-foreground"
-                          }
-                        >
-                          {students.find((s) => s.id === studentId)?.name ||
-                            "选择学生"}
-                        </span>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {students.map((s) => (
-                          <SelectItem key={s.id} value={s.id}>
-                            {s.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>日期 *</Label>
-                      <Input
-                        type="date"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>时间</Label>
-                      <Input
-                        type="time"
-                        value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>时长（分钟）</Label>
-                      <Input
-                        type="number"
-                        value={duration}
-                        onChange={(e) => setDuration(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>状态</Label>
-                      <Select
-                        value={status}
-                        onValueChange={(v) => setStatus(v ?? "ATTENDED")}
-                      >
-                        <SelectTrigger>
-                          <span>{statusLabels[status] || status}</span>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ATTENDED">已上课</SelectItem>
-                          <SelectItem value="ABSENT">旷课</SelectItem>
-                          <SelectItem value="LEAVE">请假</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>曲目/练习内容</Label>
-                    <Textarea
-                      value={repertoire}
-                      onChange={(e) => setRepertoire(e.target.value)}
-                      placeholder="如：拜厄 No.45、哈农 No.3"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>掌握情况/备注</Label>
-                    <Textarea
-                      value={lessonNotes}
-                      onChange={(e) => setLessonNotes(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>布置作业</Label>
-                    <Textarea
-                      value={homework}
-                      onChange={(e) => setHomework(e.target.value)}
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full min-h-[44px]"
-                    disabled={submitLoading}
-                  >
-                    {submitLoading ? "保存中..." : "保存记录"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
+              <Plus size={16} className="mr-1" />
+              新增记录
+            </Button>
           </div>
 
           {/* lesson list */}
@@ -532,98 +310,24 @@ export default function LessonsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* ======================== Edit Dialog ======================== */}
-      <Dialog
-        open={editOpen}
+      {/* ======================== New Lesson Dialog ======================== */}
+      <LessonForm
+        students={students}
+        open={newOpen}
+        onOpenChange={setNewOpen}
+        onSuccess={fetchLessons}
+      />
+
+      {/* ======================== Edit Lesson Dialog ======================== */}
+      <LessonForm
+        students={students}
+        open={!!editTarget}
         onOpenChange={(v) => {
-          setEditOpen(v);
-          if (!v) {
-            setEditError("");
-          }
+          if (!v) setEditTarget(null);
         }}
-      >
-        <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[90dvh] max-md:!rounded-lg">
-          <DialogHeader>
-            <DialogTitle>编辑课程记录</DialogTitle>
-          </DialogHeader>
-          {editing && (
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <ErrorMessage message={editError} />
-
-              <div className="text-sm text-muted-foreground">
-                {formatDate(editing.date)} · {editing.student.name}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>时间</Label>
-                  <Input
-                    type="time"
-                    value={editStartTime}
-                    onChange={(e) => setEditStartTime(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>时长（分钟）</Label>
-                  <Input
-                    type="number"
-                    value={editDuration}
-                    onChange={(e) => setEditDuration(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>状态</Label>
-                <Select
-                  value={editStatus}
-                  onValueChange={(v) => setEditStatus(v ?? "ATTENDED")}
-                >
-                  <SelectTrigger>
-                    <span>{statusLabels[editStatus] || editStatus}</span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ATTENDED">已上课</SelectItem>
-                    <SelectItem value="ABSENT">旷课</SelectItem>
-                    <SelectItem value="LEAVE">请假</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>曲目/练习内容</Label>
-                <Textarea
-                  value={editRepertoire}
-                  onChange={(e) => setEditRepertoire(e.target.value)}
-                  placeholder="如：拜厄 No.45、哈农 No.3"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>掌握情况/备注</Label>
-                <Textarea
-                  value={editNotes}
-                  onChange={(e) => setEditNotes(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>布置作业</Label>
-                <Textarea
-                  value={editHomework}
-                  onChange={(e) => setEditHomework(e.target.value)}
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full min-h-[44px]"
-                disabled={editLoading}
-              >
-                {editLoading ? "保存中..." : "保存修改"}
-              </Button>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
+        onSuccess={fetchLessons}
+        editLesson={editTarget}
+      />
     </div>
   );
 }
