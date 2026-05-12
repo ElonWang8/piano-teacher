@@ -4,6 +4,13 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   CalendarDays,
   CheckCircle2,
@@ -14,6 +21,7 @@ import {
   Percent,
   BookOpen,
   BarChart3,
+  FileText,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -51,9 +59,27 @@ interface DashboardData {
   recentLessons: RecentLesson[];
 }
 
+interface MonthlyReportItem {
+  studentId: string;
+  studentName: string;
+  totalLessons: number;
+  attended: number;
+  absent: number;
+  leave: number;
+  attendanceRate: number;
+  totalPayment: number;
+  totalLessonCount: number;
+}
+
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportMonth, setReportMonth] = useState(
+    new Date().toISOString().slice(0, 7)
+  );
+  const [reportData, setReportData] = useState<MonthlyReportItem[] | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -64,6 +90,26 @@ export default function DashboardPage() {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  async function fetchReport() {
+    setReportLoading(true);
+    try {
+      const res = await fetch(`/api/report/monthly?month=${reportMonth}`);
+      if (res.ok) {
+        const json = await res.json();
+        setReportData(json.report || []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setReportLoading(false);
+    }
+  }
+
+  function openReport() {
+    setReportOpen(true);
+    fetchReport();
+  }
 
   if (loading) {
     return (
@@ -91,7 +137,13 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-xl md:text-2xl font-bold tracking-tight">数据看板</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight">数据看板</h1>
+        <Button variant="outline" onClick={openReport}>
+          <FileText size={16} className="mr-2" />
+          月度报表
+        </Button>
+      </div>
 
       {/* 今日概览 */}
       <section>
@@ -286,6 +338,76 @@ export default function DashboardPage() {
           </div>
         )}
       </section>
+
+      {/* 月度报表 Dialog */}
+      <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+        <DialogContent className="max-w-4xl max-md:!max-w-[calc(100vw-2rem)] max-h-[80dvh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>月度学生报表</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <label className="text-sm text-muted-foreground">选择月份：</label>
+              <input
+                type="month"
+                value={reportMonth}
+                onChange={(e) => {
+                  setReportMonth(e.target.value);
+                }}
+                className="border rounded px-2 py-1 text-sm"
+              />
+              <Button size="sm" onClick={fetchReport} disabled={reportLoading}>
+                {reportLoading ? "加载中..." : "查询"}
+              </Button>
+            </div>
+
+            {reportData && reportData.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">
+                该月份暂无数据
+              </p>
+            )}
+
+            {reportData && reportData.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left py-2 px-3 font-medium">学生</th>
+                      <th className="text-center py-2 px-3 font-medium">上课</th>
+                      <th className="text-center py-2 px-3 font-medium">请假</th>
+                      <th className="text-center py-2 px-3 font-medium">旷课</th>
+                      <th className="text-center py-2 px-3 font-medium">出勤率</th>
+                      <th className="text-right py-2 px-3 font-medium">缴费</th>
+                      <th className="text-right py-2 px-3 font-medium">购课时</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportData.map((item) => (
+                      <tr key={item.studentId} className="border-b hover:bg-muted/30">
+                        <td className="py-2 px-3 font-medium">{item.studentName}</td>
+                        <td className="text-center py-2 px-3">{item.attended}</td>
+                        <td className="text-center py-2 px-3">{item.leave}</td>
+                        <td className="text-center py-2 px-3">{item.absent}</td>
+                        <td className="text-center py-2 px-3">
+                          <Badge variant={item.attendanceRate >= 80 ? "default" : item.attendanceRate >= 60 ? "secondary" : "destructive"}>
+                            {item.attendanceRate}%
+                          </Badge>
+                        </td>
+                        <td className="text-right py-2 px-3">
+                          {item.totalPayment > 0 ? `¥${item.totalPayment}` : "-"}
+                        </td>
+                        <td className="text-right py-2 px-3">
+                          {item.totalLessonCount > 0 ? item.totalLessonCount : "-"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
