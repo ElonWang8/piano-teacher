@@ -67,7 +67,7 @@ export async function GET() {
     month: {
       lessonCount: monthLessons, attendedCount: monthAttended,
       income: monthPayments._sum.amount || 0, studentCount, attendanceRate,
-      scheduleCount: monthSchedules,
+      scheduleCount: monthSchedules + monthAttended,
     },
     recentLessons: recentLessons.map((l) => ({
       id: l.id, date: l.date, studentName: l.student.name, repertoire: l.repertoire,
