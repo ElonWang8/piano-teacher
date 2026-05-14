@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { X } from "lucide-react";
 import type { MonthlyReportItem } from "@/types";
 
 interface Props {
@@ -41,6 +42,9 @@ export function MonthlyReport({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-md:!max-w-[calc(100vw-2rem)] max-h-[80dvh] overflow-auto">
+        <button onClick={() => onOpenChange(false)} className="absolute top-3 right-3 z-50 p-1 rounded-full hover:bg-muted md:hidden" aria-label="关闭">
+          <X size={20} />
+        </button>
         <DialogHeader>
           <DialogTitle>月度学生报表</DialogTitle>
         </DialogHeader>

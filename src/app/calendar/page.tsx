@@ -24,6 +24,7 @@ import {
   Pencil,
   CheckCheck,
   UserX,
+  X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -194,6 +195,20 @@ export default function CalendarPage() {
   const [checkinHomework, setCheckinHomework] = useState("");
   const [checkinLoading, setCheckinLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [hasAiKey, setHasAiKey] = useState(false);
+
+  // 检查是否配置了 AI API Key
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/user/settings");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.aiApiKey) setHasAiKey(true);
+        }
+      } catch { /* ignore */ }
+    })();
+  }, []);
 
   function openCheckin(schedule: Schedule) {
     setCheckinSchedule(schedule);
@@ -418,6 +433,9 @@ export default function CalendarPage() {
       {/* check-in dialog */}
       <Dialog open={checkinOpen} onOpenChange={setCheckinOpen}>
         <DialogContent className="max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
+          <button onClick={() => setCheckinOpen(false)} className="absolute top-3 right-3 z-50 p-1 rounded-full hover:bg-muted md:hidden" aria-label="关闭">
+            <X size={20} />
+          </button>
           <DialogHeader><DialogTitle>签到确认</DialogTitle></DialogHeader>
           {checkinSchedule && (
             <form onSubmit={handleCheckinSubmit} className="space-y-4">
@@ -429,11 +447,13 @@ export default function CalendarPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label>曲目/练习内容</Label>
-                  <Button type="button" variant="outline" size="sm" onClick={handleAIPolish} disabled={aiLoading}>
-                    {aiLoading ? "整理中..." : "AI 整理"}
-                  </Button>
+                  {hasAiKey && (
+                    <Button type="button" variant="outline" size="sm" onClick={handleAIPolish} disabled={aiLoading}>
+                      {aiLoading ? "整理中..." : "AI 整理"}
+                    </Button>
+                  )}
                 </div>
-                <Textarea value={checkinRepertoire} onChange={e => setCheckinRepertoire(e.target.value)} placeholder="输入上课情况描述，点击 AI 整理自动填充" />
+                <Textarea value={checkinRepertoire} onChange={e => setCheckinRepertoire(e.target.value)} placeholder={hasAiKey ? "输入上课情况描述，点击 AI 整理自动填充" : "如：拜厄 No.45、哈农 No.3"} />
               </div>
               <div className="space-y-2">
                 <Label>掌握情况/备注</Label>

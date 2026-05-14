@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Search, Plus, Users, Trash2, Download, Upload } from "lucide-react";
+import { Search, Plus, Users, Trash2, Download, Upload, X } from "lucide-react";
 import * as XLSX from "xlsx";
 
 interface Student {
@@ -155,6 +155,9 @@ export default function StudentsPage() {
           <Dialog open={importOpen} onOpenChange={setImportOpen}>
             <DialogTrigger render={<Button variant="outline" className="min-h-[44px]"><Upload size={16} className="mr-1" />导入</Button>} />
             <DialogContent className="max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
+              <button onClick={() => setImportOpen(false)} className="absolute top-3 right-3 z-50 p-1 rounded-full hover:bg-muted md:hidden" aria-label="关闭">
+                <X size={20} />
+              </button>
               <DialogHeader><DialogTitle>导入学生</DialogTitle></DialogHeader>
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
@@ -176,6 +179,9 @@ export default function StudentsPage() {
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setError(""); }}>
             <DialogTrigger render={<Button className="min-h-[44px]"><Plus size={16} className="mr-1" />添加学生</Button>} />
             <DialogContent className="max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
+              <button onClick={() => setOpen(false)} className="absolute top-3 right-3 z-50 p-1 rounded-full hover:bg-muted md:hidden" aria-label="关闭">
+                <X size={20} />
+              </button>
               <DialogHeader><DialogTitle>添加学生</DialogTitle></DialogHeader>
               <ErrorMessage message={error} />
               <StudentForm onSuccess={() => { setOpen(false); fetchStudents(); toast.success("学生添加成功"); }} />

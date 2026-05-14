@@ -9,9 +9,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { StudentForm } from "@/components/students/student-form";
 import { ProgressTimeline } from "@/components/students/progress-timeline";
+import { LessonForm, type LessonFormEditTarget } from "@/components/lessons/lesson-form";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Pencil, Copy } from "lucide-react";
+import { ArrowLeft, Pencil, Copy, X } from "lucide-react";
 
 interface Lesson {
   id: string;
@@ -55,6 +56,7 @@ export default function StudentDetailPage() {
   const toast = useToast();
   const [student, setStudent] = useState<StudentDetail | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [editLessonTarget, setEditLessonTarget] = useState<LessonFormEditTarget | null>(null);
 
   async function fetchStudent() {
     const res = await fetch(`/api/students/${id}`);
@@ -72,6 +74,20 @@ ${lesson.notes ? `掌握情况：${lesson.notes}` : ""}
 ${lesson.homework ? `本周作业：${lesson.homework}` : ""}`.trim();
     await navigator.clipboard.writeText(text);
     toast.success("已复制，可粘贴发送给家长");
+  }
+
+  function openEditLesson(lesson: Lesson) {
+    setEditLessonTarget({
+      id: lesson.id,
+      date: lesson.date,
+      startTime: lesson.startTime,
+      durationMinutes: lesson.durationMinutes,
+      repertoire: lesson.repertoire,
+      notes: lesson.notes,
+      homework: lesson.homework,
+      status: lesson.status,
+      studentName: student?.name || "",
+    });
   }
 
   if (!student) {
@@ -96,6 +112,9 @@ ${lesson.homework ? `本周作业：${lesson.homework}` : ""}`.trim();
                 <Pencil size={16} />
               </DialogTrigger>
               <DialogContent className="max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
+                <button onClick={() => setEditOpen(false)} className="absolute top-3 right-3 z-50 p-1 rounded-full hover:bg-muted md:hidden" aria-label="关闭">
+                  <X size={20} />
+                </button>
                 <DialogHeader><DialogTitle>编辑学生</DialogTitle></DialogHeader>
                 <StudentForm
                   student={student}
@@ -145,6 +164,17 @@ ${lesson.homework ? `本周作业：${lesson.homework}` : ""}`.trim();
                       >
                         <Copy size={14} />
                       </Button>
+                      {l.status === "ATTENDED" && (
+                        <Button
+                          size="icon-sm"
+                          variant="ghost"
+                          aria-label="编辑"
+                          onClick={() => openEditLesson(l)}
+                          title="编辑课程记录"
+                        >
+                          <Pencil size={14} />
+                        </Button>
+                      )}
                       <Badge variant={l.status === "ATTENDED" ? "default" : l.status === "ABSENT" ? "destructive" : "secondary"}>
                         {l.status === "ATTENDED" ? "已上课" : l.status === "ABSENT" ? "旷课" : "请假"}
                       </Badge>
@@ -203,6 +233,17 @@ ${lesson.homework ? `本周作业：${lesson.homework}` : ""}`.trim();
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Lesson Dialog */}
+      <LessonForm
+        students={[]}
+        open={!!editLessonTarget}
+        onOpenChange={(v) => {
+          if (!v) setEditLessonTarget(null);
+        }}
+        onSuccess={() => { fetchStudent(); }}
+        editLesson={editLessonTarget}
+      />
     </div>
   );
 }

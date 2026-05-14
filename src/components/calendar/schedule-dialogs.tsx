@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { cn } from "@/lib/utils";
-import { Plus, ListPlus } from "lucide-react";
+import { Plus, ListPlus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { sendBark } from "@/lib/bark";
 
@@ -124,6 +124,9 @@ function AddScheduleDialog({
         }
       />
       <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
+        <button onClick={() => setOpen(false)} className="absolute top-3 right-3 z-50 p-1 rounded-full hover:bg-muted md:hidden" aria-label="关闭">
+          <X size={20} />
+        </button>
         <DialogHeader>
           <DialogTitle>添加排课</DialogTitle>
         </DialogHeader>
@@ -292,6 +295,9 @@ function BatchScheduleDialog({
         }
       />
       <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
+        <button onClick={() => setOpen(false)} className="absolute top-3 right-3 z-50 p-1 rounded-full hover:bg-muted md:hidden" aria-label="关闭">
+          <X size={20} />
+        </button>
         <DialogHeader>
           <DialogTitle>批量排课</DialogTitle>
         </DialogHeader>
@@ -488,6 +494,9 @@ export function EditScheduleDialog({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
+        <button onClick={onClose} className="absolute top-3 right-3 z-50 p-1 rounded-full hover:bg-muted md:hidden" aria-label="关闭">
+          <X size={20} />
+        </button>
         <DialogHeader>
           <DialogTitle>编辑排课</DialogTitle>
         </DialogHeader>

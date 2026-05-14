@@ -16,20 +16,56 @@ export default function SettingsPage() {
   const [name, setName] = useState(session?.user?.name || "");
   const [backupLoading, setBackupLoading] = useState(false);
 
-  // Bark 通知配置
+  // 用户设置（从 API 加载，兼容 localStorage 旧数据）
   const [barkUrl, setBarkUrl] = useState("");
+  const [aiApiKey, setAiApiKey] = useState("");
   const [barkSaved, setBarkSaved] = useState(false);
+  const [, setSettingsLoading] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem("barkUrl") || "";
-    setBarkUrl(saved);
+    (async () => {
+      try {
+        const res = await fetch("/api/user/settings");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.barkUrl) setBarkUrl(data.barkUrl);
+          else {
+            const saved = localStorage.getItem("barkUrl") || "";
+            if (saved) setBarkUrl(saved);
+          }
+          if (data.aiApiKey) setAiApiKey(data.aiApiKey);
+        } else {
+          const saved = localStorage.getItem("barkUrl") || "";
+          if (saved) setBarkUrl(saved);
+        }
+      } catch {
+        const saved = localStorage.getItem("barkUrl") || "";
+        if (saved) setBarkUrl(saved);
+      } finally {
+        setSettingsLoading(false);
+      }
+    })();
   }, []);
 
-  function saveBark() {
-    localStorage.setItem("barkUrl", barkUrl);
-    setBarkSaved(true);
-    toast.success("Bark 通知已配置");
-    setTimeout(() => setBarkSaved(false), 2000);
+  async function saveSettings() {
+    try {
+      const res = await fetch("/api/user/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ barkUrl, aiApiKey }),
+      });
+      if (res.ok) {
+        if (barkUrl) localStorage.setItem("barkUrl", barkUrl);
+        else localStorage.removeItem("barkUrl");
+        setBarkSaved(true);
+        toast.success("设置已保存");
+        setTimeout(() => setBarkSaved(false), 2000);
+      } else {
+        toast.error("保存失败");
+      }
+    } catch {
+      toast.error("保存失败，请重试");
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -91,7 +127,20 @@ export default function SettingsPage() {
                 placeholder="https://api.day.app/your-key/" />
               <p className="text-xs text-muted-foreground">签到、排课等操作完成后推送通知到手机</p>
             </div>
-            <Button onClick={saveBark}>{barkSaved ? "已保存" : "保存"}</Button>
+            <Button onClick={saveSettings}>{barkSaved ? "已保存" : "保存"}</Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>AI API Key</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>AI API Key (DeepSeek/OpenAI)</Label>
+              <Input type="password" value={aiApiKey} onChange={e => setAiApiKey(e.target.value)}
+                placeholder="sk-..." />
+              <p className="text-xs text-muted-foreground">用于 AI 整理上课记录功能，留空则不启用</p>
+            </div>
+            <Button onClick={saveSettings}>{barkSaved ? "已保存" : "保存"}</Button>
           </CardContent>
         </Card>
 

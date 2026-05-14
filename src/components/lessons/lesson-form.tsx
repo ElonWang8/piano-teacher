@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorMessage } from "@/components/ui/error-message";
+import { X } from "lucide-react";
 
 const statusLabels: Record<string, string> = {
   ATTENDED: "已上课",
@@ -70,6 +71,51 @@ export function LessonForm({
   const [status, setStatus] = useState("ATTENDED");
   const [error, setError] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [hasAiKey, setHasAiKey] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  // 检查是否配置了 AI API Key
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/user/settings");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.aiApiKey) setHasAiKey(true);
+        }
+      } catch { /* ignore */ }
+    })();
+  }, []);
+
+  // ---------- AI polish ----------
+  async function handleAIPolish() {
+    const input = repertoire.trim();
+    if (!input || input.length < 5) {
+      toast.error("请先输入至少5个字的上课情况描述");
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const res = await fetch("/api/ai/polish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: input }),
+      });
+      const data = await res.json();
+      if (data.repertoire) setRepertoire(data.repertoire);
+      if (data.notes) setNotes(data.notes);
+      if (data.homework) setHomework(data.homework);
+      if (data._error) {
+        toast.error("AI 整理失败，请检查 API 配置");
+      } else {
+        toast.success("AI 整理完成");
+      }
+    } catch {
+      toast.error("AI 整理失败，请重试");
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   // ---------- initialize on open ----------
   useEffect(() => {
@@ -167,6 +213,9 @@ export function LessonForm({
       }}
     >
       <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[90dvh] max-md:!rounded-lg">
+        <button onClick={() => onOpenChange(false)} className="absolute top-3 right-3 z-50 p-1 rounded-full hover:bg-muted md:hidden" aria-label="关闭">
+          <X size={20} />
+        </button>
         <DialogHeader>
           <DialogTitle>
             {isEdit ? "编辑课程记录" : "新增课程记录"}
@@ -260,11 +309,18 @@ export function LessonForm({
 
           {/* Repertoire */}
           <div className="space-y-2">
-            <Label>曲目/练习内容</Label>
+            <div className="flex items-center justify-between">
+              <Label>曲目/练习内容</Label>
+              {isEdit && hasAiKey && (
+                <Button type="button" variant="outline" size="sm" onClick={handleAIPolish} disabled={aiLoading}>
+                  {aiLoading ? "整理中..." : "AI 整理"}
+                </Button>
+              )}
+            </div>
             <Textarea
               value={repertoire}
               onChange={(e) => setRepertoire(e.target.value)}
-              placeholder="如：拜厄 No.45、哈农 No.3"
+              placeholder={isEdit && hasAiKey ? "输入上课情况描述，点击 AI 整理自动填充" : "如：拜厄 No.45、哈农 No.3"}
             />
             <div className="flex flex-wrap gap-1.5 mt-1">
               {PIANO_TAGS.map(tag => (

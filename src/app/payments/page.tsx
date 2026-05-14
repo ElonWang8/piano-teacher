@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, CreditCard } from "lucide-react";
+import { Plus, CreditCard, X } from "lucide-react";
 
 interface Student { id: string; name: string; }
 interface Payment {
@@ -135,6 +135,9 @@ export default function PaymentsPage() {
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger render={<Button className="min-h-[44px]"><Plus size={16} className="mr-1" />新增缴费</Button>} />
           <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
+            <button onClick={() => setOpen(false)} className="absolute top-3 right-3 z-50 p-1 rounded-full hover:bg-muted md:hidden" aria-label="关闭">
+              <X size={20} />
+            </button>
             <DialogHeader><DialogTitle>新增缴费记录</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
