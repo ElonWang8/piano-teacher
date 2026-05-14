@@ -27,9 +27,9 @@ export function TodayOverview({ lessonCount, attendedCount, pendingCount, schedu
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{schedules.length}</p>
+              <p className="text-2xl font-bold">{schedules.length + attendedCount}</p>
               <p className="text-xs text-muted-foreground">
-                今日排课总数
+                今日排课(已签到 + 待签到)
               </p>
             </CardContent>
           </Card>
