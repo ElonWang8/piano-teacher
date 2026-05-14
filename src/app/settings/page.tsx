@@ -19,6 +19,8 @@ export default function SettingsPage() {
   // 用户设置（从 API 加载，兼容 localStorage 旧数据）
   const [barkUrl, setBarkUrl] = useState("");
   const [aiApiKey, setAiApiKey] = useState("");
+  const [aiApiUrl, setAiApiUrl] = useState("");
+  const [aiModel, setAiModel] = useState("");
   const [barkSaved, setBarkSaved] = useState(false);
   const [, setSettingsLoading] = useState(true);
 
@@ -34,6 +36,8 @@ export default function SettingsPage() {
             if (saved) setBarkUrl(saved);
           }
           if (data.aiApiKey) setAiApiKey(data.aiApiKey);
+          if (data.aiApiUrl) setAiApiUrl(data.aiApiUrl);
+          if (data.aiModel) setAiModel(data.aiModel);
         } else {
           const saved = localStorage.getItem("barkUrl") || "";
           if (saved) setBarkUrl(saved);
@@ -52,7 +56,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/user/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ barkUrl, aiApiKey }),
+        body: JSON.stringify({ barkUrl, aiApiKey, aiApiUrl, aiModel }),
       });
       if (res.ok) {
         if (barkUrl) localStorage.setItem("barkUrl", barkUrl);
@@ -132,13 +136,37 @@ export default function SettingsPage() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>AI API Key</CardTitle></CardHeader>
+          <CardHeader><CardTitle>🤖 AI 整理配置</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>AI API Key (DeepSeek/OpenAI)</Label>
+              <Label>API Key</Label>
               <Input type="password" value={aiApiKey} onChange={e => setAiApiKey(e.target.value)}
                 placeholder="sk-..." />
-              <p className="text-xs text-muted-foreground">用于 AI 整理上课记录功能，留空则不启用</p>
+            </div>
+            <div className="space-y-2">
+              <Label>接口地址</Label>
+              <Input value={aiApiUrl} onChange={e => setAiApiUrl(e.target.value)}
+                placeholder="https://api.deepseek.com/chat/completions" />
+            </div>
+            <div className="space-y-2">
+              <Label>模型名称</Label>
+              <Input value={aiModel} onChange={e => setAiModel(e.target.value)}
+                placeholder="deepseek-chat" />
+            </div>
+            <p className="text-xs text-muted-foreground">兼容 OpenAI 格式的 API。支持 DeepSeek / OpenAI / Groq / Ollama 等。留空则使用默认值。</p>
+            <div className="flex gap-2 text-xs text-muted-foreground">
+              <span>常用：</span>
+              <button type="button" className="underline hover:text-foreground"
+                onClick={() => { setAiApiUrl("https://api.deepseek.com/chat/completions"); setAiModel("deepseek-chat"); }}>DeepSeek</button>
+              <span>·</span>
+              <button type="button" className="underline hover:text-foreground"
+                onClick={() => { setAiApiUrl("https://api.openai.com/v1/chat/completions"); setAiModel("gpt-4o-mini"); }}>OpenAI</button>
+              <span>·</span>
+              <button type="button" className="underline hover:text-foreground"
+                onClick={() => { setAiApiUrl("https://api.groq.com/openai/v1/chat/completions"); setAiModel("llama-3.1-8b-instant"); }}>Groq</button>
+              <span>·</span>
+              <button type="button" className="underline hover:text-foreground"
+                onClick={() => { setAiApiUrl("http://localhost:11434/v1/chat/completions"); setAiModel("qwen2.5"); }}>Ollama</button>
             </div>
             <Button onClick={saveSettings}>{barkSaved ? "已保存" : "保存"}</Button>
           </CardContent>

@@ -9,11 +9,11 @@ export async function POST(req: Request) {
   const { text } = await req.json();
   if (!text || text.length < 5) return NextResponse.json({ error: "内容太短" }, { status: 400 });
 
-  // 从数据库读取用户保存的 API Key（优先），其次用环境变量
-  const user = await db.user.findUnique({ where: { id: session.user.id }, select: { aiApiKey: true } });
+  // 从数据库读取用户保存的 AI 配置（优先），其次用环境变量
+  const user = await db.user.findUnique({ where: { id: session.user.id }, select: { aiApiKey: true, aiApiUrl: true, aiModel: true } });
   const apiKey = user?.aiApiKey || process.env.AI_API_KEY;
-  const apiUrl = process.env.AI_API_URL || "https://api.deepseek.com/chat/completions";
-  const model = process.env.AI_MODEL || "deepseek-chat";
+  const apiUrl = user?.aiApiUrl || process.env.AI_API_URL || "https://api.deepseek.com/chat/completions";
+  const model = user?.aiModel || process.env.AI_MODEL || "deepseek-chat";
 
   if (!apiKey) {
     return NextResponse.json({ error: "请先在设置中配置 AI API Key" }, { status: 400 });
