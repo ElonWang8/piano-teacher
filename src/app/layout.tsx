@@ -34,7 +34,22 @@ export default async function RootLayout({
     <html
       lang="zh-CN"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem("theme") || "github";
+                  document.documentElement.setAttribute("data-theme", theme);
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col pb-14 md:pb-0">
         <SessionProvider>
           {session?.user ? (

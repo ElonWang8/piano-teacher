@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,12 +8,29 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Download } from "lucide-react";
+import { ThemeSwitcher } from "@/components/ui/theme-switcher";
 
 export default function SettingsPage() {
   const { data: session } = useSession();
   const toast = useToast();
   const [name, setName] = useState(session?.user?.name || "");
   const [backupLoading, setBackupLoading] = useState(false);
+
+  // Bark 通知配置
+  const [barkUrl, setBarkUrl] = useState("");
+  const [barkSaved, setBarkSaved] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("barkUrl") || "";
+    setBarkUrl(saved);
+  }, []);
+
+  function saveBark() {
+    localStorage.setItem("barkUrl", barkUrl);
+    setBarkSaved(true);
+    toast.success("Bark 通知已配置");
+    setTimeout(() => setBarkSaved(false), 2000);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -62,6 +79,29 @@ export default function SettingsPage() {
               </div>
               <Button type="submit" className="min-h-[44px]">保存</Button>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Bark 通知</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Bark URL</Label>
+              <Input value={barkUrl} onChange={e => setBarkUrl(e.target.value)}
+                placeholder="https://api.day.app/your-key/" />
+              <p className="text-xs text-muted-foreground">签到、排课等操作完成后推送通知到手机</p>
+            </div>
+            <Button onClick={saveBark}>{barkSaved ? "已保存" : "保存"}</Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>主题切换</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              选择你喜欢的界面配色方案
+            </p>
+            <ThemeSwitcher />
           </CardContent>
         </Card>
 
