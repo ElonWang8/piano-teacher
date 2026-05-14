@@ -85,17 +85,17 @@ ${lesson.homework ? `本周作业：${lesson.homework}` : ""}`.trim();
   return (
     <div>
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
+        <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="返回">
           <ArrowLeft size={20} />
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h2 className="text-xl md:text-2xl font-bold">{student.name}</h2>
             <Dialog open={editOpen} onOpenChange={setEditOpen}>
-              <DialogTrigger render={<Button variant="ghost" size="icon" />}>
+              <DialogTrigger render={<Button variant="ghost" size="icon" aria-label="编辑" />}>
                 <Pencil size={16} />
               </DialogTrigger>
-              <DialogContent className="max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[90dvh] max-md:!rounded-lg">
+              <DialogContent className="max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
                 <DialogHeader><DialogTitle>编辑学生</DialogTitle></DialogHeader>
                 <StudentForm
                   student={student}
@@ -139,6 +139,7 @@ ${lesson.homework ? `本周作业：${lesson.homework}` : ""}`.trim();
                       <Button
                         size="icon-sm"
                         variant="ghost"
+                        aria-label="复制上课记录"
                         onClick={() => copyLesson(l)}
                         title="复制上课记录"
                       >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -121,7 +121,7 @@ function AddScheduleDialog({
           </Button>
         }
       />
-      <DialogContent className="max-w-md max-md:!max-w-full max-md:!h-dvh max-md:!rounded-none max-md:m-0">
+      <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
         <DialogHeader>
           <DialogTitle>添加排课</DialogTitle>
         </DialogHeader>
@@ -289,7 +289,7 @@ function BatchScheduleDialog({
           </Button>
         }
       />
-      <DialogContent className="max-w-md max-md:!max-w-full max-md:!h-dvh max-md:!rounded-none max-md:m-0">
+      <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
         <DialogHeader>
           <DialogTitle>批量排课</DialogTitle>
         </DialogHeader>
@@ -350,8 +350,8 @@ function BatchScheduleDialog({
                     className={cn(
                       "w-9 h-9 rounded-full text-sm font-medium border transition-colors",
                       selected
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-background text-muted-foreground border-input hover:border-primary/50",
+                        ? "bg-[#2da44e] text-white border-[#2da44e]"
+                        : "bg-background text-muted-foreground border-input hover:border-[#2da44e]/50",
                     )}
                   >
                     {label}
@@ -446,11 +446,13 @@ export function EditScheduleDialog({
   const [loading, setLoading] = useState(false);
 
   // 当 schedule 变化时同步表单
-  if (schedule && schedule.date.split("T")[0] !== date) {
-    setDate(schedule.date.split("T")[0]);
-    setStartTime(schedule.startTime);
-    setDuration(String(schedule.durationMinutes));
-  }
+  useEffect(() => {
+    if (schedule) {
+      setDate(schedule.date.split("T")[0]);
+      setStartTime(schedule.startTime);
+      setDuration(String(schedule.durationMinutes));
+    }
+  }, [schedule?.id]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -483,7 +485,7 @@ export function EditScheduleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-md:!max-w-full max-md:!h-dvh max-md:!rounded-none max-md:m-0">
+      <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
         <DialogHeader>
           <DialogTitle>编辑排课</DialogTitle>
         </DialogHeader>

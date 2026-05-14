@@ -27,11 +27,8 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex w-56 h-screen bg-card border-r flex flex-col">
-      <div className="p-4 border-b">
-        <h1 className="text-lg font-bold tracking-tight">PianoRecord</h1>
-      </div>
-      <nav className="flex-1 p-3 space-y-1">
+    <aside className="hidden md:flex w-[180px] h-full bg-white border-r border-[#d0d7de] flex-col shrink-0">
+      <nav className="flex-1 p-2 space-y-0.5">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
@@ -39,24 +36,24 @@ export function Sidebar() {
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                "flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm transition-colors border-l-[3px]",
                 active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  ? "border-l-[#0969da] bg-[#ddf4ff] text-[#0969da] font-medium"
+                  : "border-l-transparent text-[#656d76] hover:bg-[#f6f8fa] hover:text-[#1f2328]"
               )}
             >
-              <Icon size={18} />
+              <Icon size={16} />
               {label}
             </Link>
           );
         })}
       </nav>
-      <div className="p-3 border-t">
+      <div className="p-2 border-t border-[#d0d7de]">
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-accent w-full"
+          className="flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm text-[#656d76] hover:bg-[#f6f8fa] hover:text-[#1f2328] w-full"
         >
-          <LogOut size={18} />
+          <LogOut size={16} />
           退出登录
         </button>
       </div>

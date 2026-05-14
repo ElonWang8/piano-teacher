@@ -210,6 +210,7 @@ ${lesson.homework ? `本周作业：${lesson.homework}` : ""}`.trim();
                       <Button
                         size="sm"
                         variant="outline"
+                        aria-label="签到"
                         onClick={() => handleScheduleAction(s.id, "ATTEND")}
                       >
                         <CheckCheck size={14} className="mr-1" />
@@ -218,6 +219,7 @@ ${lesson.homework ? `本周作业：${lesson.homework}` : ""}`.trim();
                       <Button
                         size="sm"
                         variant="outline"
+                        aria-label="请假"
                         onClick={() => handleScheduleAction(s.id, "LEAVE")}
                       >
                         <UserX size={14} className="mr-1" />
@@ -308,6 +310,7 @@ ${lesson.homework ? `本周作业：${lesson.homework}` : ""}`.trim();
                       <Button
                         size="icon-sm"
                         variant="ghost"
+                        aria-label="复制上课记录"
                         onClick={() => copyLesson(l)}
                         title="复制上课记录"
                       >
@@ -316,6 +319,7 @@ ${lesson.homework ? `本周作业：${lesson.homework}` : ""}`.trim();
                       <Button
                         size="icon-sm"
                         variant="ghost"
+                        aria-label="编辑"
                         onClick={() => openEdit(l)}
                       >
                         <Pencil size={14} />

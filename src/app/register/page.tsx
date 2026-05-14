@@ -60,7 +60,7 @@ export default function RegisterPage() {
             </Button>
           </form>
           <p className="text-sm text-center text-muted-foreground mt-4">
-            已有账号？<Link href="/login" className="text-primary hover:underline">登录</Link>
+            已有账号？<Link href="/login" className="text-[#2da44e] hover:underline">登录</Link>
           </p>
         </CardContent>
       </Card>

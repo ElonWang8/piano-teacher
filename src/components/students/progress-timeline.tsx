@@ -81,7 +81,7 @@ export function ProgressTimeline({ lessons, startDate, level }: Props) {
     <div className="space-y-6">
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-lg border bg-card p-3 text-center">
-          <div className="text-xl font-bold text-primary">{stats.attended.length}</div>
+          <div className="text-xl font-bold text-[#2da44e]">{stats.attended.length}</div>
           <div className="text-xs text-muted-foreground">累计课时</div>
         </div>
         <div className="rounded-lg border bg-card p-3 text-center">
@@ -112,8 +112,8 @@ export function ProgressTimeline({ lessons, startDate, level }: Props) {
         <div className="relative pl-6 border-l-2 border-muted space-y-4">
           {Object.entries(stats.grouped).reverse().map(([month, items]) => (
             <div key={month} className="relative">
-              <Circle size={10} className="absolute -left-[21px] top-1 fill-primary text-primary" />
-              <div className="text-xs font-semibold text-primary mb-1">{month}</div>
+              <Circle size={10} className="absolute -left-[21px] top-1 fill-[#2da44e] text-[#2da44e]" />
+              <div className="text-xs font-semibold text-[#2da44e] mb-1">{month}</div>
               <div className="space-y-1">
                 {items.map(l => (
                   <div key={l.id} className="text-xs text-muted-foreground">

@@ -134,7 +134,7 @@ export default function PaymentsPage() {
         <h2 className="text-xl md:text-2xl font-bold">费用管理</h2>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger render={<Button className="min-h-[44px]"><Plus size={16} className="mr-1" />新增缴费</Button>} />
-          <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[90dvh] max-md:!rounded-lg">
+          <DialogContent className="max-w-md max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
             <DialogHeader><DialogTitle>新增缴费记录</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -182,7 +182,7 @@ export default function PaymentsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="py-4 text-center">
-            <div className="text-2xl font-bold text-primary">¥{totalAmount.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-[#2da44e]">¥{totalAmount.toLocaleString()}</div>
             <div className="text-sm text-muted-foreground mt-1">总缴费金额</div>
           </CardContent>
         </Card>

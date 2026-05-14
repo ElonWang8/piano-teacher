@@ -13,13 +13,11 @@ export default function SettingsPage() {
   const { data: session } = useSession();
   const toast = useToast();
   const [name, setName] = useState(session?.user?.name || "");
-  const [saved, setSaved] = useState(false);
   const [backupLoading, setBackupLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSaved(false);
-    setSaved(true);
+    toast.info("此功能即将上线");
   }
 
   async function handleBackup() {
@@ -63,7 +61,6 @@ export default function SettingsPage() {
                 <Input value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               <Button type="submit" className="min-h-[44px]">保存</Button>
-              {saved && <p className="text-sm text-green-600">已保存</p>}
             </form>
           </CardContent>
         </Card>

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CalendarGrid } from "@/components/calendar/calendar-grid";
 import {
   ScheduleDialogs,
@@ -124,6 +125,7 @@ export default function CalendarPage() {
       if (Array.isArray(data)) setSchedules(data);
       else setSchedules([]);
     } catch {
+      toast.error("加载失败");
       setSchedules([]);
     } finally {
       setLoading(false);
@@ -208,10 +210,18 @@ export default function CalendarPage() {
   }
 
   // ---- leave ----
-  async function handleLeave(scheduleId: string) {
-    if (!window.confirm("确认请假？不会扣除课时")) return;
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+  const [leaveTargetId, setLeaveTargetId] = useState<string | null>(null);
+
+  function openLeaveConfirm(scheduleId: string) {
+    setLeaveTargetId(scheduleId);
+    setLeaveConfirmOpen(true);
+  }
+
+  async function handleLeave() {
+    if (!leaveTargetId) return;
     try {
-      const res = await fetch(`/api/schedules/${scheduleId}`, {
+      const res = await fetch(`/api/schedules/${leaveTargetId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "LEAVE" }),
@@ -313,6 +323,7 @@ export default function CalendarPage() {
                             size="sm"
                             className="h-7 px-2 text-xs"
                             onClick={() => openCheckin(s)}
+                            aria-label="签到"
                           >
                             <CheckCheck size={12} className="mr-1" />
                             签到
@@ -321,7 +332,8 @@ export default function CalendarPage() {
                             variant="ghost"
                             size="sm"
                             className="h-7 px-2 text-xs"
-                            onClick={() => handleLeave(s.id)}
+                            onClick={() => openLeaveConfirm(s.id)}
+                            aria-label="请假"
                           >
                             <UserX size={12} className="mr-1" />
                             请假
@@ -331,6 +343,7 @@ export default function CalendarPage() {
                             size="sm"
                             className="h-7 px-2 text-xs ml-auto"
                             onClick={() => openEditDialog(s)}
+                            aria-label="编辑"
                           >
                             <Pencil size={12} className="mr-1" />
                             编辑
@@ -351,7 +364,7 @@ export default function CalendarPage() {
 
       {/* check-in dialog */}
       <Dialog open={checkinOpen} onOpenChange={setCheckinOpen}>
-        <DialogContent className="max-md:!max-w-full max-md:!h-dvh max-md:!rounded-none max-md:m-0">
+        <DialogContent className="max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
           <DialogHeader><DialogTitle>签到确认</DialogTitle></DialogHeader>
           {checkinSchedule && (
             <form onSubmit={handleCheckinSubmit} className="space-y-4">
@@ -390,6 +403,18 @@ export default function CalendarPage() {
           setEditingSchedule(null);
         }}
         onRefresh={fetchSchedules}
+      />
+
+      {/* leave confirm dialog */}
+      <ConfirmDialog
+        open={leaveConfirmOpen}
+        onOpenChange={setLeaveConfirmOpen}
+        title="确认请假"
+        message="确认请假？不会扣除课时"
+        onConfirm={() => {
+          handleLeave();
+          setLeaveConfirmOpen(false);
+        }}
       />
     </div>
   );

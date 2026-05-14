@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorMessage } from "@/components/ui/error-message";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Search, Plus, Users, Trash2, Download, Upload } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -35,6 +36,7 @@ export default function StudentsPage() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState("ACTIVE");
   const [importOpen, setImportOpen] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
@@ -60,8 +62,13 @@ export default function StudentsPage() {
 
   useEffect(() => { fetchStudents(); }, [statusFilter]);
 
-  async function handleDelete(id: string, name: string) {
-    if (!window.confirm(`确定删除学生「${name}」？`)) return;
+  function promptDelete(id: string, name: string) {
+    setDeleteConfirm({ id, name });
+  }
+
+  async function handleDelete() {
+    if (!deleteConfirm) return;
+    const { id, name } = deleteConfirm;
     setDeleteLoading(id);
     try {
       const res = await fetch(`/api/students/${id}`, { method: "DELETE" });
@@ -75,6 +82,7 @@ export default function StudentsPage() {
       toast.error("删除失败，请重试");
     } finally {
       setDeleteLoading(null);
+      setDeleteConfirm(null);
     }
   }
 
@@ -120,6 +128,7 @@ export default function StudentsPage() {
         toast.error(json.error || "导入失败");
       }
     } catch {
+      console.error("学生导入失败");
       setImportResult("导入失败，请重试");
       toast.error("导入失败，请重试");
     } finally {
@@ -143,7 +152,7 @@ export default function StudentsPage() {
           </Button>
           <Dialog open={importOpen} onOpenChange={setImportOpen}>
             <DialogTrigger render={<Button variant="outline" className="min-h-[44px]"><Upload size={16} className="mr-1" />导入</Button>} />
-            <DialogContent className="max-md:!max-w-[calc(100vw-2rem)]">
+            <DialogContent className="max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
               <DialogHeader><DialogTitle>导入学生</DialogTitle></DialogHeader>
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
@@ -155,7 +164,7 @@ export default function StudentsPage() {
                   accept=".xlsx,.xls,.json"
                   onChange={handleImport}
                   disabled={importLoading}
-                  className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                  className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#2da44e] file:text-white hover:file:bg-[#2da44e]/90"
                 />
                 {importLoading && <p className="text-sm text-muted-foreground">导入中...</p>}
                 {importResult && <p className="text-sm text-muted-foreground">{importResult}</p>}
@@ -164,7 +173,7 @@ export default function StudentsPage() {
           </Dialog>
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setError(""); }}>
             <DialogTrigger render={<Button className="min-h-[44px]"><Plus size={16} className="mr-1" />添加学生</Button>} />
-            <DialogContent className="max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[90dvh] max-md:!rounded-lg">
+            <DialogContent className="max-md:!max-w-[calc(100vw-2rem)] max-md:!max-h-[85dvh] max-md:!rounded-lg">
               <DialogHeader><DialogTitle>添加学生</DialogTitle></DialogHeader>
               <ErrorMessage message={error} />
               <StudentForm onSuccess={() => { setOpen(false); fetchStudents(); toast.success("学生添加成功"); }} />
@@ -174,7 +183,7 @@ export default function StudentsPage() {
       </div>
 
       <div className="relative mb-4">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-label="搜索" />
         <Input className="pl-9" placeholder="搜索学生姓名..." value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
@@ -207,7 +216,7 @@ export default function StudentsPage() {
                 <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
                   <CardContent className="flex items-center justify-between py-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                      <div className="w-10 h-10 rounded-full bg-[#2da44e] flex items-center justify-center text-white font-bold text-sm">
                         {s.name.charAt(0)}
                       </div>
                       <div>
@@ -231,7 +240,8 @@ export default function StudentsPage() {
                 size="icon"
                 className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
                 disabled={deleteLoading === s.id}
-                onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleDelete(s.id, s.name); }}
+                aria-label="删除"
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); promptDelete(s.id, s.name); }}
               >
                 <Trash2 size={16} className="text-destructive" />
               </Button>
@@ -242,6 +252,15 @@ export default function StudentsPage() {
           <p className="text-center text-muted-foreground py-12">未找到匹配的学生</p>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        onOpenChange={(v) => { if (!v) setDeleteConfirm(null); }}
+        title="确认删除"
+        message={`确定删除学生「${deleteConfirm?.name || ""}」？此操作不可撤销。`}
+        onConfirm={handleDelete}
+        loading={!!deleteConfirm && deleteLoading === deleteConfirm.id}
+      />
     </div>
   );
 }

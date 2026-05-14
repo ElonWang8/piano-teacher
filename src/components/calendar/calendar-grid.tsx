@@ -99,7 +99,7 @@ export function CalendarGrid({
                 "flex flex-col items-center border-b border-r p-1 transition-colors hover:bg-accent/50 focus-visible:bg-accent/50 outline-none",
                 !inMonth && "bg-muted/30 text-muted-foreground/50",
                 selected &&
-                  "ring-2 ring-inset ring-primary bg-primary/5",
+                  "ring-2 ring-inset ring-[#2da44e] bg-[#2da44e]/5",
                 today && !selected && "bg-accent/20",
               )}
             >
@@ -107,8 +107,8 @@ export function CalendarGrid({
               <span
                 className={cn(
                   "inline-flex items-center justify-center w-6 h-6 text-xs rounded-full",
-                  today && "bg-primary text-primary-foreground font-semibold",
-                  selected && !today && "font-bold text-primary",
+                  today && "bg-[#2da44e] text-white font-semibold",
+                  selected && !today && "font-bold text-[#2da44e]",
                   holidayName && !today && "text-red-500 font-semibold",
                   workdayReason && !today && !holidayName && "text-amber-600 font-semibold",
                 )}
@@ -134,7 +134,7 @@ export function CalendarGrid({
                   {daySchedules.slice(0, 3).map((s) => (
                     <span
                       key={s.id}
-                      className="w-1.5 h-1.5 rounded-full bg-primary/70"
+                      className="w-1.5 h-1.5 rounded-full bg-[#2da44e]/70"
                     />
                   ))}
                   {daySchedules.length > 3 && (

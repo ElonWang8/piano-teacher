@@ -70,7 +70,7 @@ export default function LoginPage() {
             </Button>
           </form>
           <p className="text-sm text-center text-muted-foreground mt-4">
-            还没有账号？<Link href="/register" className="text-primary hover:underline">注册</Link>
+            还没有账号？<Link href="/register" className="text-[#2da44e] hover:underline">注册</Link>
           </p>
         </CardContent>
       </Card>
