@@ -11,6 +11,8 @@ export interface Student {
   status?: string;
   notes?: string | null;
   startDate?: string | null;
+  pendingSchedules?: number;
+  totalLessons?: number;
 }
 
 export interface Lesson {
@@ -75,6 +77,7 @@ export interface MonthStats {
   income: number;
   studentCount: number;
   attendanceRate: number;
+  scheduleCount?: number;
 }
 
 export interface RecentLesson {

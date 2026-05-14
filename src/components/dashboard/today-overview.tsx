@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Clock, CheckCircle2, BookOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,50 +18,56 @@ export function TodayOverview({ lessonCount, attendedCount, pendingCount, schedu
     <section>
       <h2 className="text-lg font-semibold mb-4">今日概览</h2>
       <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              今日课程
-            </CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{lessonCount}</p>
-            <p className="text-xs text-muted-foreground">
-              已记录 {attendedCount} 节
-            </p>
-          </CardContent>
-        </Card>
+        <Link href="/calendar">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                今日课程
+              </CardTitle>
+              <BookOpen className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{schedules.length}</p>
+              <p className="text-xs text-muted-foreground">
+                今日排课总数
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              已出勤
-            </CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-green-600">
-              {attendedCount}
-            </p>
-            <p className="text-xs text-muted-foreground">今日完成课程</p>
-          </CardContent>
-        </Card>
+        <Link href="/lessons">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                已签到
+              </CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-green-600">
+                {attendedCount}
+              </p>
+              <p className="text-xs text-muted-foreground">今日已完成</p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              待上课
-            </CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-orange-500">
-              {pendingCount}
-            </p>
-            <p className="text-xs text-muted-foreground">等待课程记录</p>
-          </CardContent>
-        </Card>
+        <Link href="/calendar">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                待签到
+              </CardTitle>
+              <Clock className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-orange-500">
+                {pendingCount}
+              </p>
+              <p className="text-xs text-muted-foreground">剩余待签到</p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {schedules.length > 0 && (

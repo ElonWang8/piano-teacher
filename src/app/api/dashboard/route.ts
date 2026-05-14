@@ -35,6 +35,10 @@ export async function GET() {
     where: { student: { userId: session.user.id }, date: { gte: monthStart, lte: monthEnd }, status: "ATTENDED" },
   });
 
+  const monthSchedules = await db.schedule.count({
+    where: { student: { userId: session.user.id }, date: { gte: monthStart, lte: monthEnd } },
+  });
+
   const monthPayments = await db.payment.aggregate({
     where: { student: { userId: session.user.id }, date: { gte: monthStart, lte: monthEnd } },
     _sum: { amount: true },
@@ -55,7 +59,7 @@ export async function GET() {
     today: {
       lessonCount: todayLessons,
       attendedCount: todayAttended,
-      pendingCount: todaySchedules.length - todayAttended,
+      pendingCount: todaySchedules.length,
       schedules: todaySchedules.map((s) => ({
         id: s.id, time: s.startTime, studentName: s.student.name, durationMinutes: s.durationMinutes,
       })),
@@ -63,6 +67,7 @@ export async function GET() {
     month: {
       lessonCount: monthLessons, attendedCount: monthAttended,
       income: monthPayments._sum.amount || 0, studentCount, attendanceRate,
+      scheduleCount: monthSchedules,
     },
     recentLessons: recentLessons.map((l) => ({
       id: l.id, date: l.date, studentName: l.student.name, repertoire: l.repertoire,
