@@ -29,25 +29,41 @@ export async function POST(req: Request) {
 大白话内容：${text}`;
 
   try {
+    const body = JSON.stringify({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+      max_tokens: 500,
+    });
+
     const res = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" },
-        max_tokens: 500,
-      }),
+      body,
     });
 
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      console.error(`AI API error ${res.status}: ${errText.slice(0, 200)}`);
+      return NextResponse.json({
+        error: `API 返回错误 (${res.status})：${errText.slice(0, 100) || "请检查 API Key 和接口地址是否正确"}`,
+      }, { status: 502 });
+    }
+
     const data = await res.json();
-    const result = JSON.parse(data.choices?.[0]?.message?.content || "{}");
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      console.error("AI API: no content in response", JSON.stringify(data).slice(0, 200));
+      return NextResponse.json({ error: "AI 返回了空内容，请检查模型名称是否正确" }, { status: 502 });
+    }
+
+    const result = JSON.parse(content);
     return NextResponse.json({
       repertoire: result.repertoire || text,
       notes: result.notes || "",
       homework: result.homework || "",
     });
   } catch {
-    return NextResponse.json({ repertoire: text, notes: "", homework: "", _error: true });
+    return NextResponse.json({ error: "网络请求失败，请检查接口地址是否正确，或接口是否可达" }, { status: 502 });
   }
 }
