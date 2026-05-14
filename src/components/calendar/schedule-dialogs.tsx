@@ -22,6 +22,7 @@ import { ErrorMessage } from "@/components/ui/error-message";
 import { cn } from "@/lib/utils";
 import { Plus, ListPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { sendBark } from "@/lib/bark";
 
 interface Student {
   id: string;
@@ -96,6 +97,7 @@ function AddScheduleDialog({
 
       if (res.ok) {
         toast.success("排课已添加");
+        sendBark("排课成功", `${label || ""} ${date} ${startTime}`);
         setOpen(false);
         setStudentId("");
         onRefresh();
