@@ -40,6 +40,7 @@ import {
   subMonths,
 } from "date-fns";
 import { holidays, workdays } from "@/lib/holidays";
+import { sendBark } from "@/lib/bark";
 
 // ---------- types ----------
 
@@ -171,6 +172,7 @@ export default function CalendarPage() {
   const [checkinNotes, setCheckinNotes] = useState("");
   const [checkinHomework, setCheckinHomework] = useState("");
   const [checkinLoading, setCheckinLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   function openCheckin(schedule: Schedule) {
     setCheckinSchedule(schedule);
@@ -178,6 +180,35 @@ export default function CalendarPage() {
     setCheckinNotes("");
     setCheckinHomework("");
     setCheckinOpen(true);
+  }
+
+  async function handleAIPolish() {
+    const input = checkinRepertoire.trim();
+    if (!input || input.length < 5) {
+      toast.error("请先输入至少5个字的上课情况描述");
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const res = await fetch("/api/ai/polish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: input }),
+      });
+      const data = await res.json();
+      if (data.repertoire) setCheckinRepertoire(data.repertoire);
+      if (data.notes) setCheckinNotes(data.notes);
+      if (data.homework) setCheckinHomework(data.homework);
+      if (data._error) {
+        toast.error("AI 整理失败，请检查 API 配置");
+      } else {
+        toast.success("AI 整理完成");
+      }
+    } catch {
+      toast.error("AI 整理失败，请重试");
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   async function handleCheckinSubmit(e: React.FormEvent) {
@@ -197,6 +228,7 @@ export default function CalendarPage() {
       });
       if (res.ok) {
         toast.success("已签到");
+        sendBark("签到成功", `${checkinSchedule.student.name} ${checkinRepertoire || checkinSchedule.startTime}`);
         setCheckinOpen(false);
         fetchSchedules();
       } else {
@@ -226,7 +258,7 @@ export default function CalendarPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "LEAVE" }),
       });
-      if (res.ok) { toast.success("已请假"); fetchSchedules(); }
+      if (res.ok) { toast.success("已请假"); sendBark("请假成功", "已记录请假"); fetchSchedules(); }
       else toast.error("操作失败");
     } catch { toast.error("操作失败，请重试"); }
   }
@@ -374,8 +406,13 @@ export default function CalendarPage() {
                 <div><span className="text-muted-foreground">时间：</span>{checkinSchedule.startTime} · {checkinSchedule.durationMinutes}分钟</div>
               </div>
               <div className="space-y-2">
-                <Label>曲目/练习内容</Label>
-                <Textarea value={checkinRepertoire} onChange={e => setCheckinRepertoire(e.target.value)} placeholder="如：拜厄 No.45、哈农 No.3" />
+                <div className="flex items-center justify-between">
+                  <Label>曲目/练习内容</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={handleAIPolish} disabled={aiLoading}>
+                    {aiLoading ? "整理中..." : "AI 整理"}
+                  </Button>
+                </div>
+                <Textarea value={checkinRepertoire} onChange={e => setCheckinRepertoire(e.target.value)} placeholder="输入上课情况描述，点击 AI 整理自动填充" />
               </div>
               <div className="space-y-2">
                 <Label>掌握情况/备注</Label>
