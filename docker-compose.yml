@@ -9,8 +9,8 @@ services:
       - ./data:/app/data
     environment:
       - DATABASE_URL=file:/app/data/dev.db
-      - AUTH_SECRET=${AUTH_SECRET:-change-me-to-a-random-string}
-      - BACKUP_SECRET=${BACKUP_SECRET:-piano-teacher-backup-secret}
+      - AUTH_SECRET=${AUTH_SECRET:?required}
+      - BACKUP_SECRET=${BACKUP_SECRET:?required}
     # 启动时自动同步数据库
     command: sh -c "cd /app && npx prisma db push --skip-generate && node server.js"
 
@@ -23,7 +23,7 @@ services:
     volumes:
       - ./backups:/backups
     environment:
-      - BACKUP_SECRET=${BACKUP_SECRET:-piano-teacher-backup-secret}
+      - BACKUP_SECRET=${BACKUP_SECRET:?required}
     entrypoint: /bin/sh
     command:
       - -c
@@ -33,7 +33,7 @@ services:
           HOUR=$$(date +%H)
           if [ "$$HOUR" = "02" ]; then
             DATE=$$(date +%Y-%m-%d)
-            curl -s "http://app:3000/api/backup?secret=$$BACKUP_SECRET" -o /backups/backup-$$DATE.json
+            curl -s -H "Authorization: Bearer $$BACKUP_SECRET" "http://app:3000/api/backup" -o /backups/backup-$$DATE.json
             echo "Backup completed at $$(date)"
           fi
         done

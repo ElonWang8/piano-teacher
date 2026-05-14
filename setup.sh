@@ -6,8 +6,9 @@ echo "=== PianoRecord 部署脚本 ==="
 
 # 生成随机密钥（如果还没有）
 if [ ! -f .env ]; then
-  echo "生成 AUTH_SECRET..."
+  echo "生成 AUTH_SECRET 和 BACKUP_SECRET..."
   echo "AUTH_SECRET=$(openssl rand -base64 32)" > .env
+  echo "BACKUP_SECRET=$(openssl rand -base64 32)" >> .env
   echo "✅ .env 文件已创建"
 else
   echo "✅ .env 已存在，跳过"

@@ -71,7 +71,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ created, skipped, total: students.length });
-  } catch {
+  } catch (e) {
+    console.error("学生导入失败:", e);
     return NextResponse.json({ error: "文件解析失败，请检查文件格式" }, { status: 400 });
   }
 }

@@ -8,6 +8,9 @@ export async function POST(req: Request) {
     if (!name || !email || !password) {
       return NextResponse.json({ error: "请填写所有必填字段" }, { status: 400 });
     }
+    if (password.length < 8) {
+      return NextResponse.json({ error: "密码长度不能少于8位" }, { status: 400 });
+    }
     const existing = await db.user.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json({ error: "该邮箱已被注册" }, { status: 400 });
@@ -17,7 +20,8 @@ export async function POST(req: Request) {
       data: { name, email, passwordHash },
     });
     return NextResponse.json({ id: user.id, name: user.name, email: user.email });
-  } catch {
+  } catch (e) {
+    console.error("注册失败:", e);
     return NextResponse.json({ error: "注册失败" }, { status: 500 });
   }
 }

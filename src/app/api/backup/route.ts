@@ -3,12 +3,12 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export async function GET(req: Request) {
-  // Check for backup secret (used by docker backup service)
-  const { searchParams } = new URL(req.url);
-  const secret = searchParams.get("secret");
+  // Check for backup secret via Authorization header (used by docker backup service)
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
   const backupSecret = process.env.BACKUP_SECRET;
 
-  if (backupSecret && secret === backupSecret) {
+  if (backupSecret && token === backupSecret) {
     // Service-level backup: export all data
     const students = await db.student.findMany({
       include: {
