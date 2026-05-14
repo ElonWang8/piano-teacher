@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -8,17 +9,14 @@ export async function POST(req: Request) {
   const { text } = await req.json();
   if (!text || text.length < 5) return NextResponse.json({ error: "内容太短" }, { status: 400 });
 
-  const apiKey = process.env.AI_API_KEY;
+  // 从数据库读取用户保存的 API Key（优先），其次用环境变量
+  const user = await db.user.findUnique({ where: { id: session.user.id }, select: { aiApiKey: true } });
+  const apiKey = user?.aiApiKey || process.env.AI_API_KEY;
   const apiUrl = process.env.AI_API_URL || "https://api.deepseek.com/chat/completions";
   const model = process.env.AI_MODEL || "deepseek-chat";
 
   if (!apiKey) {
-    return NextResponse.json({
-      repertoire: text,
-      notes: "",
-      homework: "",
-      _raw: true,
-    });
+    return NextResponse.json({ error: "请先在设置中配置 AI API Key" }, { status: 400 });
   }
 
   const prompt = `你是一位经验丰富的钢琴教师。请将学生家长/老师用大白话描述的上课情况，整理成专业的钢琴教学记录。
