@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PianoRecord - 钢琴老师课程记录
 
-## Getting Started
+面向钢琴老师的课程管理与教学记录平台。支持学生管理、排课签到、费用追踪、学琴历程时间线。
 
-First, run the development server:
+## 特性
+
+- 学生管理（在读/毕业/肄业状态筛选）
+- 排课日历 + 批量排课（日期范围 + 星期选择）
+- 上课签到/请假 + 曲目/备注/作业记录
+- 费用管理（缴费记录 + 消课追踪）
+- 学琴历程时间线（进度概览 + 阶段统计 + 分月记录）
+- AI 整理上课记录（大白话 → 专业钢琴教学术语）
+- 中国法定节假日 + 调休标注
+- 5 套 UI 主题切换
+- 响应式设计（桌面端 + 手机端）
+- 数据 JSON 导出导入 + 定时备份
+- Bark 推送通知
+
+## 技术栈
+
+Next.js 16 · TypeScript · Prisma · SQLite · Tailwind CSS · NextAuth v5 · Docker
+
+## 本地开发
 
 ```bash
+git clone https://github.com/ElonWang8/piano-teacher.git
+cd piano-teacher
+npm install
+npx prisma generate
+npx prisma db push
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+打开 http://localhost:3000 注册账号即可。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Docker 部署
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+参见 [DEPLOY.md](./DEPLOY.md)
 
-## Learn More
+```bash
+git clone https://github.com/ElonWang8/piano-teacher.git
+cd piano-teacher
+bash setup.sh
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 开源协议
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+MIT
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 作者
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+ElonWang8
