@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cache } from "react";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -7,6 +8,8 @@ import { BottomNav } from "@/components/layout/bottom-nav";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { auth } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
+
+const getSession = cache(() => auth());
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +31,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
+  const session = await getSession();
 
   return (
     <html

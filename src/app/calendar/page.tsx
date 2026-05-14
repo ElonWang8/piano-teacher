@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,11 +17,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { CalendarGrid } from "@/components/calendar/calendar-grid";
-import {
-  ScheduleDialogs,
-  EditScheduleDialog,
-} from "@/components/calendar/schedule-dialogs";
 import {
   Clock,
   User,
@@ -41,6 +37,31 @@ import {
 } from "date-fns";
 import { holidays, workdays } from "@/lib/holidays";
 import { sendBark } from "@/lib/bark";
+
+// ---------- dynamic imports (code-split heavy components) ----------
+
+const CalendarGrid = dynamic(
+  () => import("@/components/calendar/calendar-grid").then((mod) => mod.CalendarGrid),
+  {
+    loading: () => <Skeleton type="card" count={1} />,
+  },
+);
+
+const ScheduleDialogs = dynamic(
+  () =>
+    import("@/components/calendar/schedule-dialogs").then(
+      (mod) => mod.ScheduleDialogs,
+    ),
+  { ssr: false },
+);
+
+const EditScheduleDialog = dynamic(
+  () =>
+    import("@/components/calendar/schedule-dialogs").then(
+      (mod) => mod.EditScheduleDialog,
+    ),
+  { ssr: false },
+);
 
 // ---------- types ----------
 
