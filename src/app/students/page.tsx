@@ -26,6 +26,8 @@ interface Student {
   parentPhone?: string | null;
   status?: string;
   notes?: string | null;
+  totalLessons?: number;
+  pendingSchedules?: number;
 }
 
 export default function StudentsPage() {
@@ -223,6 +225,10 @@ export default function StudentsPage() {
                         <div className="font-semibold">{s.name}</div>
                         <div className="text-sm text-muted-foreground">
                           {s.level || "未设置级别"} {s.age ? `· ${s.age}岁` : ""}
+                        </div>
+                        <div className="flex gap-3 text-xs text-muted-foreground mt-1">
+                          <span>📋 {s.totalLessons || 0} 节已上</span>
+                          <span>📅 {s.pendingSchedules || 0} 节待上</span>
                         </div>
                       </div>
                     </div>

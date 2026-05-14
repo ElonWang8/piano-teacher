@@ -22,9 +22,10 @@ export async function GET(req: Request) {
     orderBy: { createdAt: "desc" },
   });
 
-  const result = students.map((s) => {
+  const result = await Promise.all(students.map(async (s) => {
     const totalPaid = s.payments.reduce((sum, p) => sum + p.lessonCount, 0);
     const attendedCount = s._count.lessons;
+    const pendingCount = await db.schedule.count({ where: { studentId: s.id } });
     return {
       id: s.id,
       name: s.name,
@@ -37,9 +38,10 @@ export async function GET(req: Request) {
       totalLessons: totalPaid,
       attendedLessons: attendedCount,
       remainingLessons: totalPaid - attendedCount,
+      pendingSchedules: pendingCount,
       createdAt: s.createdAt,
     };
-  });
+  }));
 
   return NextResponse.json(result);
 }
