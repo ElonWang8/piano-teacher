@@ -51,7 +51,8 @@ export async function POST(req: Request) {
     }
 
     const data = await res.json();
-    const content = data.choices?.[0]?.message?.content;
+    const msg = data.choices?.[0]?.message;
+    const content = msg?.content || msg?.reasoning_content;
     if (!content) {
       console.error("AI API: no content in response", JSON.stringify(data).slice(0, 200));
       return NextResponse.json({ error: "AI 返回了空内容，请检查模型名称是否正确" }, { status: 502 });
